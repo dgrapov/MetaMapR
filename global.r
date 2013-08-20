@@ -68,9 +68,9 @@ values[["Citric Acid Cycle"]] <-data.frame(KEGG = TCA.kegg, CID = TCA.CID )
 datasets<-"Citric Acid Cycle"
 
 #metabolomics example small data set
-values[["metabolomics data"]<-read.csv("example data.csv")
+values[["metabolomics data"]]<-read.csv("example data.csv")
 
-datasets<-c("Citric Acid Cycle", "Metabolomics data")
+datasets<-c("Citric Acid Cycle", "metabolomics data")
 
 #initialize states
 values$clipboard<-""
