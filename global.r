@@ -66,8 +66,16 @@ TCA.CID <- c("[]","51", "440649","[]", "439161",   "1110",    "972",      "1198"
 values[["Citric Acid Cycle"]] <-data.frame(KEGG = TCA.kegg, CID = TCA.CID )
 # values[["Citric Acid Cycle"]] <-"Citric_Acid_Cycle"
 datasets<-"Citric Acid Cycle"
+
+#metabolomics example small data set
+values[["metabolomics data"]<-read.csv("example data.csv")
+
+datasets<-c("Citric Acid Cycle", "Metabolomics data")
+
+#initialize states
 values$clipboard<-""
 values$network_state<-""
+
 # #test data for spectra and correlation
 # # setwd("C:/Users/D/Desktop")
 # metabolomics.data<-x<-read.csv("example data.csv")
