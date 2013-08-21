@@ -39,7 +39,7 @@ sourceGitDirectory<-function(url="https://github.com/dgrapov/devium/tree/master/
 }
 
 sourceGitDirectory(url="https://github.com/dgrapov/devium/tree/master/R", user="dgrapov") 
-#
+
 
 # options(repos = c("http://cran.rstudio.com/"))
 #options(repos ="http://www.stats.ox.ac.uk/pub/RWin")
@@ -75,6 +75,7 @@ datasets<-c("Citric Acid Cycle", "metabolomics data")
 #initialize states
 values$clipboard<-""
 values$network_state<-""
+
 
 # #test data for spectra and correlation
 # # setwd("C:/Users/D/Desktop")

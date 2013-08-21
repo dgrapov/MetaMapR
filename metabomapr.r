@@ -1,5 +1,4 @@
 # move elsewhere post debugging
-
 #ggplot based network drawing fxn
 ggplot2.network<-function(edge.list, edge.color.var = NULL, edge.color = NULL, directed = FALSE,
 						node.color = NULL, show.names = TRUE,
