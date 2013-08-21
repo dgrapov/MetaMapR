@@ -111,7 +111,9 @@ ggplot2.network<-function(edge.list, edge.color.var = NULL, edge.color = NULL, d
 	new_theme_empty$plot.title <- element_blank()
 	new_theme_empty$axis.title <- element_blank()
 	new_theme_empty$plot.margin <- structure(c(0, 0, -1, -1), unit = "lines", valid.unit = 3L, class = "unit")
-                                        
+    new_theme_empty$legend.text <-theme_text( size = 20)
+	new_theme_empty$legend.title    <-theme_text(size = 20 )  
+	
 	#set default plotting variables
 	# Edge colors
 	if(is.null(edge.color)){
@@ -141,9 +143,9 @@ ggplot2.network<-function(edge.list, edge.color.var = NULL, edge.color = NULL, d
 							aes(x = x, y = y-.2, label = label), size = node.label.size)	# node names
 	zp1 <- zp1 + scale_colour_manual(values = edge.color, guide = edge.guide)
 	zp1 <- zp1 + scale_size(range = c(1/100, max.edge.thickness), guide = "none")  #edge thickness
-	zp1 <-zp1 + guides(color = guide_legend(override.aes = list (size = 1.5 ))) + labs(color='Edge Type')	
+	zp1 <-zp1 + guides(color = guide_legend(override.aes = list (size = 3 ))) + labs(color='Edge Type')	
 	# Customize gradient 
-	zp1 <- zp1 + new_theme_empty  # Clean up plot
+	zp1 <- zp1 + new_theme_empty   # Clean up plot
 	print(zp1)
 }
 
