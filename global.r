@@ -41,10 +41,10 @@ sourceGitDirectory<-function(url="https://github.com/dgrapov/devium/tree/master/
 sourceGitDirectory(url="https://github.com/dgrapov/devium/tree/master/R", user="dgrapov") 
 #
 
-options(repos = c("http://cran.rstudio.com/"))
-libs <- c("tools","CTSgetR","lsa","igraph","reshape2","network","sna","Hmisc","graph","ggplot2")
- #"RJSONIO", "shiny", "car", "AER", "Ecdat", "foreign", "tools", "ggplot2", 
-	#"gridExtra", "reshape2", "plyr", "markdown", "R.utils", "psych", "rela", "arm", "xts")
+# options(repos = c("http://cran.rstudio.com/"))
+#options(repos ="http://www.stats.ox.ac.uk/pub/RWin")
+libs <- c("tools","CTSgetR","igraph","reshape2","network","sna","Hmisc","ggplot2")
+
 available <- suppressWarnings(suppressPackageStartupMessages(sapply(libs, require, character.only=TRUE)))
 inst.libs <- libs[available == FALSE]
 if(length(inst.libs) != 0) {
@@ -57,7 +57,7 @@ if(length(inst.libs) != 0) {
 # install.packages("RJSONIO")
 # library(devtools);library(RJSONIO)#;library(RCurl) 
 # install_github(repo = "CTSgetR", username = "dgrapov")
-library(CTSgetR)
+# library(CTSgetR)
 
 values <- reactiveValues()
 TCA.kegg <- c("C15973","C00026","C05381","C15972","C00091","C00042","C05379","C00311","C00036","C00024","C00149","C00417","C00158","C00022","C05125","C16254","C00122","C16255","C00074")
@@ -78,6 +78,7 @@ values$network_state<-""
 
 # #test data for spectra and correlation
 # # setwd("C:/Users/D/Desktop")
+# # setwd("C:\\Users\\Node\\Dropbox\\Devium\\devium\\Shiny\\MetaboMapR")
 # metabolomics.data<-x<-read.csv("example data.csv")
 # spectra <- x$mass.spec
 # CID.id <-x$PubChem.id
