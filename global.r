@@ -80,11 +80,20 @@ values$network_state<-""
 # #test data for spectra and correlation
 # # setwd("C:/Users/D/Desktop")
 # # setwd("C:\\Users\\Node\\Dropbox\\Devium\\devium\\Shiny\\MetaboMapR")
+# # setwd("C:/Users/dgrapov/Dropbox/Devium/devium/Shiny/MetaMapR")
 # metabolomics.data<-x<-read.csv("example data.csv")
 # spectra <- x$mass.spec
 # CID.id <-x$PubChem.id
+# KEGG
 # input<-list()
 # input$network_spec_primary_nodes<-known<-x$known
 # e<-get.spectral.edge.list(spectra, known = c(1,2), cutoff = 0.7, edge.limit = max(1:length(spectra)))
 # data<-x[,10:12]
 # type<-input$network_index_type_cor <- "spearman"
+
+#test translations
+# kegg.id<-CTSgetR(id = fixlc(x$PubChem.id), from="PubChem CID",to="KEGG", async=TRUE,limit.values=FALSE)
+
+
+
+

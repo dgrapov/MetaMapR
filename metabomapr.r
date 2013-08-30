@@ -341,10 +341,12 @@ calculate_edgelist<-reactive({#function(){
 	
 		trans.id<- !"KEGG"%in%index.type
 		if(trans.id){
-			kegg.id<-CTSgetR(id = index, from=index.type,to="KEGG", async=TRUE)
+			kegg.id<-fixlc(CTSgetR(id = index, from=index.type,to="KEGG", async=TRUE)[,2])
 		} else {kegg.id<-index}
 		res<-data.frame(NULL)
-		reaction.DB<-get.KEGG.pairs(type="main") # can add other types of relationships, main = direct precursor -> direct transformations
+		if(!exists("reaction.DB")){
+			reaction.DB<-get.KEGG.pairs(type="main")
+		}# can add other types of relationships, main = direct precursor -> direct transformations
 		# index.translation.DB<-data.frame(cids,kegg.ids)
 		#get reaction pairs
 		kegg.edges<-get.Reaction.pairs(kegg.id,reaction.DB,index.translation.DB=NULL,parallel=FALSE,translate=FALSE)
@@ -374,7 +376,7 @@ calculate_edgelist<-reactive({#function(){
 	
 		trans.id<- !"PubChem CID"%in%index.type
 		if(trans.id){
-			CID.id<-CTSgetR(id = index, from=index.type,to="PubChem CID")
+			CID.id<-fixlc(CTSgetR(id = index, from=index.type,to="PubChem CID")[,2])
 		} else {CID.id<-index}
 		
 		# get tanimoto similarity
@@ -392,7 +394,7 @@ calculate_edgelist<-reactive({#function(){
 	}
 	
 	#spectral similarity edges based on cosine correlation between m/z spectra
-	if(input$spec_edges){
+	if(input$spec_edges){ #use 1 or 0 encoding to limit connections from known=1 to unknown = 0 (no 0-0)
 		index<-getdata()[,input$network_index_spec]
 		known<-input$network_spec_primary_nodes
 		if(!known == "0"){known<-getdata()[,known]} # long story
@@ -528,38 +530,6 @@ output$edge_list <- renderTable({
 })
 
 
-
-# # Generate output for the plots tab
-# output$network <- renderPlot({
-		
-		# # if(!input$metabomapr == "Network") return()
-		# if(is.null(values$edge.list)) { 
-			# plot(x = 1, type = 'n', main="Please calculate edge list first.", axes = FALSE, xlab = "", ylab = "")
-		# } else if(length(values$edge.list) == 0) { 
-			# plot(x = 1, type = 'n', main="No connections fit set criteria.", axes = FALSE, xlab = "", ylab = "")
-		# } else {
-		
-		
-			# #igraph network
-			# #options for igraph.plot
-			# #see all options http://127.0.0.1:10494/library/igraph/html/plot.common.html
-			# # graph.par.obj<-list(
-			# # x = NULL,# this is also calculated by the function should control
-			# # mark.groups = NULL,
-			# # mark.col = NULL,
-			# # layout = DB[,c("x.pos","y.pos")],#"layout.fruchterman.reingold",
-			# # vertex.label = node.par$name, 
-			# # vertex.color = mark.col,
-			# # vertex.size = 2,
-			# # vertex.label.dist=-2)
-			# graph.par.obj<-NULL
-			# #need mechanism to selectively color edges
-			# #make plot
-			# edge.list<-values$edge.list[,1:2]
-			# devium.igraph.plot(edge.list,graph.par.obj,plot.type="static",add=FALSE) # if running in local mode plot can be interactive or 3D
-		# }
-	# })
-	
 # Generate output for the plots tab
 output$network <- renderPlot({
 	
