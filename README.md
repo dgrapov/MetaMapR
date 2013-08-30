@@ -1,4 +1,4 @@
-MetaMapR
+(MetaMapR)[http://spark.rstudio.com/dgrapov/MetaMapR/]
 ========
 
 Network mapping tool for metabolomics + data.
