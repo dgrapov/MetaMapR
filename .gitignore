@@ -2,5 +2,5 @@
 .Rhistory
 
 # Example code in package build process
-*-Ex.R
+test.R
 .Rproj.user
