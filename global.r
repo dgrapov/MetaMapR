@@ -43,7 +43,7 @@ sourceGitDirectory(url="https://github.com/dgrapov/devium/tree/master/R", user="
 
 # options(repos = c("http://cran.rstudio.com/"))
 #options(repos ="http://www.stats.ox.ac.uk/pub/RWin")
-libs <- c("tools","CTSgetR","igraph","reshape2","network","sna","Hmisc","ggplot2")
+libs <- c("tools","CTSgetR","igraph","reshape2","network","sna","Hmisc","ggplot2","RJSONIO")
 
 available <- suppressWarnings(suppressPackageStartupMessages(sapply(libs, require, character.only=TRUE)))
 inst.libs <- libs[available == FALSE]
