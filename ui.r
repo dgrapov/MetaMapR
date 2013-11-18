@@ -1,12 +1,21 @@
+  #using the navbar
+  getTool <- function(inputId) {
+  tagList(
+    singleton(tags$head(tags$script(src = "js/navbar.js"))),
+    tags$html(includeHTML('www/navbar.html'))
+  )
+}
 
-	# UI for app
+# UI for app
 shinyUI(pageWithSidebar(
-  # title
-  headerPanel("MetaMapR"),
+ 
+ # title
+  headerPanel(""),
   
   # input
   sidebarPanel
   (
+	  getTool("tool"), # navbar
 		wellPanel(
 					h3('Data'),
 					uiOutput("datasets"),
@@ -15,7 +24,7 @@ shinyUI(pageWithSidebar(
 						 div(class='span3', checkboxInput(inputId = "csv_row_header", label = "row names",value=TRUE)),
 						 div(class='span5', checkboxInput(inputId = "csv_col_header", label = "column names",value=TRUE)))
 						 ),
-					HTML("<label>Load data: (.rda | .csv | .sav | .dta)</label>"),
+					HTML("<label>Load data: (.csv)</label>"),
 					uiOutput("upload_local_server"),
 					HTML("<label>Paste data:</label>"),
 					tags$textarea(id="copyAndPaste", rows=3, cols=40, ""))
@@ -51,14 +60,17 @@ shinyUI(pageWithSidebar(
 	tabsetPanel( id = "metabomapr",
 		tabPanel("Data", tableOutput("view_data")),
 		tabPanel("Edge List", list(actionButton("create_edgelist", "Calculate Connections"),
+		downloadButton('downloadEdgeList', 'Download'),
 		br(),
 		tableOutput("edge_list"))),
-		tabPanel("Node Attributes",tableOutput("node.attributes")),
+		tabPanel("Node Attributes",downloadButton('downloadNodeAttributes', 'Download'),
+			tableOutput("node.attributes")),
 		tabPanel("Network", list(actionButton("create_edgelist_network", "Draw Network"),
 		tags$details( # options for network plotting
+			checkboxInput(inputId = "network_plot_show_name", label = "show names",value=TRUE),
+			uiOutput("node_names"),
 			checkboxInput(inputId = "network_plot_bezier", label = "curved edges",value=FALSE),
 			numericInput(inputId = "network_plot_edge_size", "edge thickness", min = 0, max = 20, value = 2, step = .25),
-			checkboxInput(inputId = "network_plot_show_name", label = "show names",value=TRUE),
 			numericInput(inputId = "network_plot_name_size", "label size", min = 0, max = 20, value = 5, step = 1),
 			numericInput(inputId = "network_plot_node_size", "vertex size", min = 0, max = 20, value = 5, step = 1)
 		),
@@ -72,7 +84,7 @@ shinyUI(pageWithSidebar(
 		),
 		tags$head(tags$style(type="text/css",
 		  '#progressIndicator {',
-		  '  position: fixed; top: 8px; center: 8px; width: 200px; height: 50px;',
+		  '  position: fixed; top: 100px; right: 8px; width: 200px; height: 50px;',
 		  '  padding: 8px; border: 1px solid #CCC; border-radius: 8px;',
 		  '}'
 		))

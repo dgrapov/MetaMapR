@@ -1,16 +1,17 @@
-# move elsewhere post debugging
+
 #ggplot based network drawing fxn
 ggplot2.network<-function(edge.list, edge.color.var = NULL, edge.color = NULL, directed = FALSE,
-						node.color = NULL, show.names = TRUE,
+						node.color = NULL, show.names = TRUE,node.names=NULL,
 						bezier = TRUE, node.size = 7,node.label.size = 5, max.edge.thickness = 2){
 	# edge list  = 2 column data.frame representing source and target. Columns over 2 will be sorted with edgelist. 
 	# edge.color.var = name of variable in edge list to use to color
 	# edge.color = color for each level of object edge.color.var
 	# directed = logical, if FALSE edge will be transposed and duplicated making undirected
 	# node.color = colors for nodes, need to take into account node name ordering
-	# node.names = names of nodes
+	# show.names = can be supplied names for nodes, TRUE = network index, FALSE = nothing
+
 	
-	# Function to generate paths between each connected node
+	# Function to generate paths between each connected node (very slow when transparent!)
 	# adapted from : https://gist.github.com/dsparks/4331058
 	edgeMaker <- function(whichRow, len = 100, curved = TRUE){
 	  fromC <- layoutCoordinates[adjacencyList[whichRow, 1], ]  # Origin
@@ -66,18 +67,19 @@ ggplot2.network<-function(edge.list, edge.color.var = NULL, edge.color = NULL, d
 		if(all(!directed)) { is.rev<-rep(TRUE, nrow(edge.list)) } else { is.rev<-directed==TRUE }
 		rev.edge.list<-data.frame(rbind(as.matrix(edge.list[,1:2]),as.matrix(edge.list[is.rev,2:1]))) # need matrix else no reordering of columns?
 	} else{ 
-		rev.edge.list<-edge.list[,1:2]
+		rev.edge.list<-edge.list[,1:2,drop=FALSE]
 	}
 	#extra info (separate now, later recombine)
 	info<-edge.list[,-c(1:2)]
 	
 	#getting layout and making sure edeg list ids are in the same order
-	g<-as.network(rev.edge.list[,1:2],matrix.type = "edgelist")
+	g<-as.network(rev.edge.list[,1:2],matrix.type = "edgelist") # 
 	#control remaking of the layout (only update if edge.list has changed)
 	if(!exists("node.layout")){
 		node.layout<<-gplot.layout.fruchtermanreingold(g[,], layout.par = NULL)
 		values$network_state<-g
 	}
+	
 	#marker of a change in state
 	if(!identical(g,values$network_state)){
 		node.layout<<-gplot.layout.fruchtermanreingold(g[,], layout.par = NULL)
@@ -86,6 +88,17 @@ ggplot2.network<-function(edge.list, edge.color.var = NULL, edge.color = NULL, d
 	n.edge.list<-as.matrix.network.edgelist(g)
 	dimnames(node.layout)<-list(rownames(g[,]),c("x","y"))
 
+	
+	if(is.null(node.names)){ 
+			node.names<-attr(n.edge.list,"vnames") # default
+		} else {
+			#get from data set or node attributes
+			tmp<-as.character(unlist(Nodeobjects()[,node.names]))
+			node.names<-tmp[attr(n.edge.list,"vnames") ]
+		}
+	#if (show.names==TRUE) {node.names<-attr(n.edge.list,"vnames") } #default network index
+	if(show.names==FALSE){node.names<-rep("",nrow(node.layout))} #nothing
+	values$node.names<-node.names
 	#preparing for edge path
 	layoutCoordinates<-node.layout
 	adjacencyList<-data.frame(n.edge.list,info)
@@ -127,10 +140,11 @@ ggplot2.network<-function(edge.list, edge.color.var = NULL, edge.color = NULL, d
 	}
 	# node colors
 	if(is.null(node.color)){node.color <-"red"; node.guide = FALSE} else {node.guide = TRUE}
-	# node names
-	if(length(show.names) == attr(n.edge.list,"vnames")) { node.names <- show.names} 
-	if (show.names) { node.names<-attr(n.edge.list,"vnames") } 
-	if(!show.names){node.names<-rep("",nrow(node.layout))}
+	
+	# # node names (set above)
+	# if(length(show.names) == attr(n.edge.list,"vnames")) { node.names <- show.names} 
+	# if (show.names) { node.names<-attr(n.edge.list,"vnames") } 
+	# if(!show.names){node.names<-rep("",nrow(node.layout))}
 	#make plot
 	zp1 <- ggplot(allEdges)  # Pretty simple plot code
 	#bezier edges	
@@ -220,7 +234,7 @@ loadcopyAndPaste <- function(pFile) {
 }
 
 #################################################
-# reactive barrowed from radyant
+# reactive borrowed from radyant
 #################################################
 
 uploadfunc <- reactive({
@@ -298,6 +312,22 @@ varnames <- function() {
 	colnames(getdata())
 }
 
+#possible names for nodes
+Nodenames <- function() {
+	if(is.null(input$datasets)) x<-NULL else x<-colnames(getdata())
+	if(is.null(values$node.attributes)) y<-NULL else y<-colnames(values$node.attributes)
+	res<-c(x,y)
+	if(is.null(res)) return (NULL) else return(res)
+}
+
+#possible names for nodes
+Nodeobjects <- function() {
+	if(is.null(input$datasets)) x<-NULL else x<-getdata()
+	if(is.null(values$node.attributes)) y<-NULL else y<-values$node.attributes
+	res<-cbind(x,y)
+	if(is.null(res)) return (NULL) else return(res)
+}
+
 #names of databas identifiers
 DB.names <- function() {
 	if(is.null(input$datasets)) return()
@@ -311,7 +341,7 @@ MZ.encode<-function(){
 
 #get network_spec
 
-#function to rencode edge.list index
+#function to rencode edge.list index 
 make.edge.list.index<-function(edge.names, edge.list){
 	#need to replace old ids with ne code in multiple edge.lists
 	e1<-translate.index(id= matrix(fixlc(edge.list[,1])), lookup = edge.names)
@@ -449,7 +479,6 @@ calculate_edgelist<-reactive({#function(){
 	return(res)
 })
 
-
 #function to rencode index
 make.edge.list.index<-function(edge.names, edge.list){
 	#need to replace old ids with ne code in multiple edge.lists
@@ -516,6 +545,12 @@ wellPanel(
 	))
 })
 
+#node names
+output$node_names<-renderUI({
+selectInput(inputId = "node_names", label ="Names", choices = Nodenames(), selected = varnames()[1], multiple = FALSE)
+})
+
+
 # Generate output for the summary tab
 # output$summary <- renderUI(function() {
 output$edge_list <- renderTable({
@@ -528,7 +563,6 @@ output$edge_list <- renderTable({
 	})
 	
 })
-
 
 # Generate output for the plots tab
 output$network <- renderPlot({
@@ -548,7 +582,7 @@ output$network <- renderPlot({
 		
 			edge.list<-values$edge.list
 			ggplot2.network(edge.list, edge.color.var = "type", edge.color = NULL, directed = FALSE,
-						node.color = NULL, show.names = input$network_plot_show_name,
+						node.color = NULL, show.names = input$network_plot_show_name, node.names=input$node_names,
 						bezier = input$network_plot_bezier, node.size = input$network_plot_node_size, 
 						node.label.size = input$network_plot_name_size, max.edge.thickness = input$network_plot_edge_size)				
 						
@@ -567,3 +601,32 @@ output$node.attributes <- renderTable({
 	})
 	
 })
+
+#downloading objects
+#------------------------
+#edge list for download
+currentEdgeList <- reactive({
+	values$edge.list
+})
+
+# node attributesedge list for download
+currentNodeAttributes <- reactive({
+	values$node.attributes
+})
+
+#download edgelist
+output$downloadEdgeList <- downloadHandler(
+    filename = function() { "edge list.csv" },
+    content = function(file) {
+      write.csv(currentEdgeList(), file,row.names=FALSE)
+    }
+  )
+  
+ #download node attributes
+  output$downloadNodeAttributes<- downloadHandler(
+    filename = function() { "node attributes.csv" },
+    content = function(file) {
+      write.csv(currentNodeAttributes(), file,row.names=FALSE)
+    }
+  )
+  
