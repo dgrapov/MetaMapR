@@ -19,7 +19,7 @@ shinyUI(pageWithSidebar(
 		wellPanel(
 					h3('Data'),
 					uiOutput("datasets"),
-					tags$details(
+					tags$details(tags$summary("Upload Options"),
 					withTags(div(class='row-fluid',
 						 div(class='span3', checkboxInput(inputId = "csv_row_header", label = "row names",value=TRUE)),
 						 div(class='span5', checkboxInput(inputId = "csv_col_header", label = "column names",value=TRUE)))

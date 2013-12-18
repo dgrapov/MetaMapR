@@ -72,7 +72,7 @@ ggplot2.network<-function(edge.list, edge.color.var = NULL, edge.color = NULL, d
 	#extra info (separate now, later recombine)
 	info<-edge.list[,-c(1:2)]
 	
-	#getting layout and making sure edeg list ids are in the same order
+	#getting layout and making sure edge list ids are in the same order
 	g<-as.network(rev.edge.list[,1:2],matrix.type = "edgelist") # 
 	#control remaking of the layout (only update if edge.list has changed)
 	if(!exists("node.layout")){
@@ -339,16 +339,6 @@ MZ.encode<-function(){
 	list("m/z : intensity" = "mz_int")
 }
 
-#get network_spec
-
-#function to rencode edge.list index 
-make.edge.list.index<-function(edge.names, edge.list){
-	#need to replace old ids with ne code in multiple edge.lists
-	e1<-translate.index(id= matrix(fixlc(edge.list[,1])), lookup = edge.names)
-	e2<-translate.index(id= matrix(fixlc(edge.list[,2])), lookup = edge.names)
-	data.frame(source = e1, target = e2)
-}
-
 # function for edge list calculations
 #translate index and calculate edges
 calculate_edgelist<-reactive({#function(){
@@ -381,7 +371,7 @@ calculate_edgelist<-reactive({#function(){
 		#get reaction pairs
 		kegg.edges<-get.Reaction.pairs(kegg.id,reaction.DB,index.translation.DB=NULL,parallel=FALSE,translate=FALSE)
 		
-		#create shared index between diffrent edge ids
+		#create shared index between different edge ids
 		index<-kegg.id
 		edge.names<-data.frame(index, network.id = c(1:length(index)))
 		kegg.edges<-make.edge.list.index(edge.names,kegg.edges)
@@ -416,6 +406,7 @@ calculate_edgelist<-reactive({#function(){
 		index<-CID.id
 		edge.names<-data.frame(index, network.id = c(1:length(index)))
 		tani.edges[,1:2]<-make.edge.list.index(edge.names,tani.edges)
+		
 		
 		if(nrow(tani.edges)>0){
 			res<-data.frame(rbind(res,data.frame(as.matrix(tani.edges[,1:2]),type = "Tanimoto", weight = tani.edges[,3,])))
@@ -474,17 +465,24 @@ calculate_edgelist<-reactive({#function(){
 	}
 	
 	#save for other functions access
-	values$edge.list<-res
+	
+	values$edge.list<-res	
+	if(all(dim(res)==0)){res<-data.frame("Error"="Please set network options")}
 	values$node.attributes<-node.attr
 	return(res)
 })
 
 #function to rencode index
+#relic needs to be replaced elsewhere
 make.edge.list.index<-function(edge.names, edge.list){
-	#need to replace old ids with ne code in multiple edge.lists
-	e1<-translate.index(id= matrix(fixlc(edge.list[,1])), lookup = edge.names)
-	e2<-translate.index(id= matrix(fixlc(edge.list[,2])), lookup = edge.names)
-	data.frame(source = e1, target = e2)
+	names<-colnames(edge.list)
+	edge.list<-do.call("cbind",lapply(1:ncol(edge.list),function(i) fixlc(edge.list[,i])))
+	colnames(edge.list)<-names
+	tmp<-data.frame(translate.index(id = edge.list[,1:2,drop=FALSE], lookup = edge.names))
+	tmp[,1]<-fixln(tmp[,1])
+	tmp[,2]<-fixln(tmp[,2])
+	colnames(tmp)<-c("source","target")
+	return(as.matrix(tmp)) #
 }
 
 #biochemical connections args
@@ -581,6 +579,11 @@ output$network <- renderPlot({
 		} else {
 		
 			edge.list<-values$edge.list
+			#trying to avoid strange errors with factors
+			names<-colnames(edge.list)[1:2]
+			edge.list[,1]<-fixln(edge.list[,1,drop=FALSE])
+			edge.list[,2]<-fixln(edge.list[,2,drop=FALSE])
+			colnames(edge.list)[1:2]<-names
 			ggplot2.network(edge.list, edge.color.var = "type", edge.color = NULL, directed = FALSE,
 						node.color = NULL, show.names = input$network_plot_show_name, node.names=input$node_names,
 						bezier = input$network_plot_bezier, node.size = input$network_plot_node_size, 
@@ -602,6 +605,7 @@ output$node.attributes <- renderTable({
 	
 })
 
+#------------------------
 #downloading objects
 #------------------------
 #edge list for download

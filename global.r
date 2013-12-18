@@ -5,7 +5,8 @@ options(width = 150, shiny.trace=TRUE)
 
 # options(repos = c("http://cran.rstudio.com/"))
 #options(repos ="http://www.stats.ox.ac.uk/pub/RWin")
-libs <- c("tools","igraph","reshape2","network","sna","Hmisc","ggplot2","RJSONIO","RCurl")
+libs <- c("tools","igraph","graph","reshape2","network","sna","Hmisc","ggplot2","RJSONIO","RCurl")
+#need more
 
 available <- suppressWarnings(suppressPackageStartupMessages(sapply(libs, require, character.only=TRUE)))
 inst.libs <- libs[available == FALSE]
