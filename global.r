@@ -5,7 +5,7 @@ options(width = 150, shiny.trace=TRUE)
 
 # options(repos = c("http://cran.rstudio.com/"))
 #options(repos ="http://www.stats.ox.ac.uk/pub/RWin")
-libs <- c("tools","igraph","graph","reshape2","network","sna","Hmisc","ggplot2","RJSONIO","RCurl")
+libs <- c("tools","igraph","graph","reshape2","network","sna","Hmisc","ggplot2","RJSONIO","RCurl","plyr")
 #need more
 
 available <- suppressWarnings(suppressPackageStartupMessages(sapply(libs, require, character.only=TRUE)))
@@ -15,7 +15,7 @@ if(length(inst.libs) != 0) {
 	suppressWarnings(suppressPackageStartupMessages(sapply(inst.libs, require, character.only=TRUE)))
 }
 
-#index translations
+#identifier translations
 if(!require("CTSgetR")){
 install.packages("devtools")
 library(devtools)
@@ -45,7 +45,7 @@ sourceGitDirectory<-function(url="https://github.com/dgrapov/devium/tree/master/
 	
 }
 
-sourceGitDirectory(url="https://github.com/dgrapov/devium/tree/master/R", user="dgrapov") 
+tryCatch(sourceGitDirectory(url="https://github.com/dgrapov/devium/tree/master/R", user="dgrapov"), error=function(e){message("Can't access")}) 
 
 #set demo data
 #----------------------
@@ -60,11 +60,27 @@ datasets<-"Citric Acid Cycle"
 
 #metabolomics example small data set
 values[["metabolomics data"]]<-read.csv("example data.csv",row.names=1)
-
 datasets<-c("Citric Acid Cycle", "metabolomics data")
+values$datasets<-datasets # used to dynamically add data sets
 
 #initialize states
 values$clipboard<-""
 values$network_state<-""
 
 
+#options for translations
+# CTS.options<-CTS.options()
+# save(CTS.options,file="CTS.options")
+load("CTS.options")
+values$CTS.options<-CTS.options
+
+
+#alternative busy message
+# HTML('<script type="text/javascript">
+        # $(document).ready(function() {
+          # $("#DownloadButton").click(function() { # where DownloadButton = action button and Download = output$
+            # $("#Download").text("Loading...");
+          # });
+        # });
+      # </script>
+# ')

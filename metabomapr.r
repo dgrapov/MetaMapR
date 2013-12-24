@@ -176,7 +176,8 @@ output$debug<- renderPrint({
 })
 
 getdata <- function(dataset = input$datasets) {
-  values[[dataset]]
+  tryCatch(values[[dataset]],error=function(e) {NULL})
+  # values[[dataset]]
 }	
 
 loadUserData <- function(uFile) {
@@ -227,11 +228,16 @@ loadcopyAndPaste <- function(pFile) {
 	values[[robjname]] <- dat
 
 	if(datasets[1] == '') {
-		datasets <<- c(robjname)
+		# datasets <<- c(robjname)
+		values$datasets <<- c(robjname)
 	} else {
-		datasets <<- unique(c(robjname,datasets))
+		# datasets <<- unique(c(robjname,datasets))
+		values$datasets <<- unique(c(robjname,datasets))
 	}
 }
+
+#reactive datasets also disable use in output$datasets
+r.datasets<-reactive({values$datasets})
 
 #################################################
 # reactive borrowed from radyant
@@ -281,7 +287,7 @@ output$downloadData <- downloadHandler(
 		}
   })
 
-
+  
 output$datasets <- renderUI({
 
 	fpath <- uploadfunc()
@@ -297,9 +303,10 @@ output$datasets <- renderUI({
 		}
 	}
 	
-	
 	# Drop-down selection of data set
-	selectInput(inputId = "datasets", label = "Select:", choices = datasets, selected = datasets[1], multiple = FALSE)
+	# selectInput(inputId = "datasets", label = "Select:", choices = datasets, selected = datasets[1], multiple = FALSE)
+	# selectInput(inputId = "datasets", label = "Select:", choices = values$datasets, selected = values$datasets[1], multiple = FALSE)
+	selectInput(inputId = "datasets", label = "Select:", choices = r.datasets(), selected = r.datasets()[1], multiple = FALSE)
 })
 
 output$view_data <-renderTable({
@@ -312,6 +319,104 @@ varnames <- function() {
 	colnames(getdata())
 }
 
+#updating the data
+changedata <- function(addCol = list(NULL), addColName = "") {
+	# change data as specified
+	if(addColName[1] == "") return()
+  # isolate ensures no reactive dependencies are used
+  # isolate({
+  	if(length(addCol) == 1 && is.null(addCol[[1]])) {
+  		return(values[[input$datasets]][,addColName] <- addCol)
+  	} else if(nrow(getdata()) == nrow(addCol)) {
+	  	return(values[[input$datasets]][,addColName] <- addCol)
+  	} 
+  	# else {
+	  # 	return(values[[input$datasets]][,addColName] <- addCol)
+	  # }
+  # })
+}
+
+#################################################
+# objects for 'Translations'
+#################################################
+translation.options<-function(){
+	values$CTS.options
+}
+
+output$data_translation_options<-renderUI({
+	wellPanel(	
+	checkboxInput(inputId = "CTS_translate", label = "",value=FALSE),
+	 h4('Identifier Translations'),
+	 conditionalPanel(condition = "input.CTS_translate",
+		selectInput(inputId = "CTS_translate_id", label = "Translate:", choices = varnames(), selected = varnames()[1], multiple = FALSE),
+		selectInput(inputId = "CTS_translate_from", label = "From:", choices = translation.options(), selected = translation.options()[1], multiple = FALSE),
+		selectInput(inputId = "CTS_translate_to", label = "To:", choices = translation.options(), selected = translation.options()[2], multiple = TRUE),
+		br(),
+		actionButton("CTS_calculate", "Calculate"),
+		HTML('<script type="text/javascript">
+        $(document).ready(function() {
+          $("#CTS_calculate").click(function() { 
+            $("#view_data").text("Translating...please wait.");
+          });
+        });
+      </script>
+		')
+		)
+	)	
+})
+
+# CTS_id<-reactive({as.list(getdata(),input$CTS_translate_id)})
+# CTS_from<-reactive({input$CTS_translate_from})
+# CTS_to<-reactive({input$CTS_translate_to})
+
+#CTS translation function
+CTS_calculate_translations<-reactive({
+	if(is.null(input$CTS_calculate)||input$CTS_translate==FALSE) return()
+	if(input$CTS_calculate == 0) return()
+	#this gets evaluated after a translation is completed and can erro thus condition on this working
+	id<-tryCatch(as.character(unlist(getdata()[,input$CTS_translate_id])),error=function(e){"ERRROR"})	# need to replace empty else bad output from CTS
+	if(all(id=="ERROR")){return()}
+	id[id==""]<-"NA"
+	multi.CTSgetR(id, input$CTS_translate_from, input$CTS_translate_to)
+})
+
+#observer to carry out translations
+observe({
+	# if (input$CTS_calculate == 0) return()
+	# if(input$CTS_translate==FALSE) return()
+	# isolate({
+	# values$BB<-CTS_calculate_translations()#as.list(CTS_id(), CTS_from(),CTS_to())
+		values$CTS_translated_values<-CTS_calculate_translations()
+		isolate({
+		if(!is.null(values$CTS_translated_values)){
+		#trying to avoid a double calculation triggered by data update from first completed calculation
+
+			data.name<-paste0("translated_",input$datasets)
+			tmp<-values$CTS_translated_values[,-1,drop=FALSE]
+			colnames(tmp)<-paste0(input$CTS_translate_from,"_to_",input$CTS_translate_to)
+			# if(length(agrep(paste0("translated_",data.name),r.datasets())==0)){ return()}# no clue, but get double binding of newly translated data
+				# values[[data.name]]<-cbind(tmp,getdata()) # ****
+				#remove old version
+				# values$datasets<-values$datasets[-agrep(paste0("translated_",data.name),values$datasets,max = list(sub = 0))]
+				# data.name<-paste0("translated_",input$datasets)
+				# values$datasets <-unique(c(r.datasets(),data.name)) # ****
+				# datasets <-unique(c(datasets,data.name))
+			#try adding to existing data
+			# values[[input$datasets]]<-cbind(tmp,getdata())
+			
+			#add to existing data (still recalculates)
+			for(i in 1:ncol(tmp)){	
+				changedata(tmp[,i,drop=FALSE], colnames(tmp)[i])
+			}
+			# values[["X"]]<-cbind(tmp,getdata())		
+			}
+		# }
+	})
+})
+
+#################################################
+# objects for 'Network'
+#################################################
 #possible names for nodes
 Nodenames <- function() {
 	if(is.null(input$datasets)) x<-NULL else x<-colnames(getdata())
@@ -419,8 +524,12 @@ calculate_edgelist<-reactive({#function(){
 		index<-getdata()[,input$network_index_spec]
 		known<-input$network_spec_primary_nodes
 		if(!known == "0"){known<-getdata()[,known]} # long story
-		
-		spec.edges<-get.spectral.edge.list(spectra = index, known = known, cutoff = input$spec_cutoff, edge.limit = input$network_spec_nodes_max)
+	
+		if(input$network_spec_retention_index=="0"){retention.index<-NULL} else {retention.index<-getdata()[,input$network_spec_retention_index]}
+		spec.edges<-get.spectral.edge.list(spectra = index, known = known, 
+							cutoff = input$spec_cutoff, edge.limit = input$network_spec_nodes_max,
+							retention.index=retention.index,retention.cutoff=input$network_spec_retention_index_cutoff)
+							
 		if(nrow(spec.edges)>0){
 			res<-data.frame(rbind(res,data.frame(as.matrix(spec.edges[,1:2]),type = "m/z", weight = spec.edges[,3])))
 			node.attr<-data.frame(cbind(node.attr,mass.spectral.edge.index  = index))	
@@ -430,7 +539,9 @@ calculate_edgelist<-reactive({#function(){
 	#edges based on correlation
 	if(input$cor_edges){
 		data<-getdata()[,input$network_index_cor]
-		tmp<-devium.calculate.correlations(data,type=input$network_index_type_cor, results = "edge list")            
+		tmp.data<-t(data)
+		colnames(tmp.data)<-1:nrow(data)
+		tmp<-devium.calculate.correlations(tmp.data,type=input$network_index_type_cor, results = "edge list")            
 		
 		#fdr adjust trade p-value for q-value
 		if(input$cor_edges_fdr) { 
@@ -444,14 +555,16 @@ calculate_edgelist<-reactive({#function(){
 		cor.edges<-tmp[fixln(tmp[,4]) <= input$cor_cutoff,]
 		
 		if(nrow(cor.edges)>0){
-			type<-paste("positive",input$network_index_type_cor)
+			type<-rep(paste("positive",input$network_index_type_cor),nrow(cor.edges))
+			type[fixln(cor.edges[,3])<=0]<-paste("negative",input$network_index_type_cor)
 			res<-data.frame(rbind(res,data.frame(as.matrix(cor.edges[,1:2]),type = type, weight = abs(fixln(cor.edges[,3])))))
-			res$type[fixln(cor.edges[,3])<=0]<-paste("negative",input$network_index_type_cor)
-			res[,1]<-gsub("X","",fixlc(res[,1]))
-			res[,2]<-gsub("X","",fixlc(res[,2]))
+			# res$type[fixln(cor.edges[,3])<=0]<-paste("negative",input$network_index_type_cor)
+			# res[,1]<-gsub("X","",fixlc(res[,1]))
+			# res[,2]<-gsub("X","",fixlc(res[,2]))
 			#Which nodes are correlations calculated for
-			cor.index<-rep(0,nrow(getdata()))
-			cor.index[rownames(getdata())%in%gsub("X","",input$network_index_cor)]<-1
+			# cor.index<-rep(0,nrow(getdata()))
+			# cor.index[rownames(getdata())%in%gsub("X","",input$network_index_cor)]<-1
+			cor.index<-1:nrow(data)
 			node.attr<-data.frame(cbind(node.attr,correlation.edge.index  = cor.index))	
 		} 
 		
@@ -496,8 +609,10 @@ output$network_index_info_bio<-renderUI({
 	 h4('Biochemical'),
 	 # tags$style(type='text/css', "#bio_edges { font-weight: bold; font-size:16px;}"),
 		conditionalPanel(condition = "input.bio_edges",
-			selectInput(inputId = "network_index_bio", label = "Metabolite index:", choices = varnames(), selected = varnames()[1], multiple = FALSE),
-			selectInput(inputId = "network_index_type_bio", label = "Index type:", choices = DB.names(), selected = DB.names()[2], multiple = FALSE)
+		selectInput(inputId = "network_index_type_bio", label = "Database:", choices = list("KEGG" = "kegg" ), selected = "KEGG", multiple = FALSE),
+			selectInput(inputId = "network_index_bio", label = "Metabolite index:", choices = varnames(), selected = varnames()[1], multiple = FALSE)
+			# selectInput(inputId = "network_index_type_bio", label = "Index type:", choices = DB.names(), selected = DB.names()[2], multiple = FALSE)
+		
 		)	
 	)
 		
@@ -509,9 +624,10 @@ output$network_index_info_chem<-renderUI({
 	checkboxInput(inputId = "chem_edges", label = "",value=FALSE),
 	h4('Chemical Similarity'),
 		conditionalPanel(condition = "input.chem_edges",
+		selectInput(inputId = "network_index_type_chem", label = "Database:", choices = list("PubChem CID" = "pubchemCID" ), selected = "PubChem CID", multiple = FALSE),
 		selectInput(inputId = "network_index_chem", label = "Metabolite index:", choices = varnames(), selected = varnames()[1], multiple = FALSE),
-		selectInput(inputId = "network_index_type_chem", label = "Index type:", choices = DB.names(), selected = DB.names()[3], multiple = FALSE),
-		numericInput(inputId = "tanimoto_cutoff" , "cutoff", value = 0.7, min = 0, max = 1, step = .005)
+		# selectInput(inputId = "network_index_type_chem", label = "Index type:", choices = DB.names(), selected = DB.names()[3], multiple = FALSE),
+		numericInput(inputId = "tanimoto_cutoff" , "Cutoff:", value = 0.7, min = 0, max = 1, step = .005)
 	))
 })
 
@@ -524,8 +640,10 @@ output$network_index_info_spec<-renderUI({
 		selectInput(inputId = "network_index_spec", label = "Mass spectra:", choices = varnames(), selected = varnames()[1], multiple = FALSE),
 		selectInput(inputId = "network_index_type_spec", label = "Encode type:", choices = MZ.encode(), selected = MZ.encode()[1], multiple = FALSE),
 		selectInput(inputId = "network_spec_primary_nodes", label = "Primary nodes:", choices = c("none" = 0,varnames()), selected = "none", multiple = FALSE),
-		numericInput(inputId = "network_spec_nodes_max", "Maximum connections", min = 1, max = 1000, value = 5, step = 1), # need to dynamixcally update max, or make it big for now?
-		numericInput(inputId = "spec_cutoff" , "cutoff", value = 0.7, min = 0, max = 1, step = .005)
+		numericInput(inputId = "network_spec_nodes_max", "Maximum connections:", min = 1, max = 1000, value = 5, step = 1), # need to dynamixcally update max, or make it big for now?
+		numericInput(inputId = "spec_cutoff" , "cutoff:", value = 0.7, min = 0, max = 1, step = .005),
+		selectInput(inputId = "network_spec_retention_index", label = "Retention time filter:", choices = c("none" = 0,varnames()), selected = "none", multiple = FALSE),
+		numericInput(inputId = "network_spec_retention_index_cutoff" , "Delta cutoff:", value = 10000, min = 0, step = 500)
 	))
 })
 
@@ -547,7 +665,6 @@ wellPanel(
 output$node_names<-renderUI({
 selectInput(inputId = "node_names", label ="Names", choices = Nodenames(), selected = varnames()[1], multiple = FALSE)
 })
-
 
 # Generate output for the summary tab
 # output$summary <- renderUI(function() {
@@ -613,9 +730,19 @@ currentEdgeList <- reactive({
 	values$edge.list
 })
 
-# node attributesedge list for download
+# node attributes for download
 currentNodeAttributes <- reactive({
 	values$node.attributes
+})
+
+#data for download
+currentDataObject <- reactive({
+	values[[input$datasets]]
+})
+
+#name of data data
+currentDataObjectName<-reactive({ # -function(){
+	paste0(input$datasets,".csv")	
 })
 
 #download edgelist
@@ -623,14 +750,18 @@ output$downloadEdgeList <- downloadHandler(
     filename = function() { "edge list.csv" },
     content = function(file) {
       write.csv(currentEdgeList(), file,row.names=FALSE)
-    }
-  )
+    } )
   
  #download node attributes
-  output$downloadNodeAttributes<- downloadHandler(
+ output$downloadNodeAttributes<- downloadHandler(
     filename = function() { "node attributes.csv" },
     content = function(file) {
       write.csv(currentNodeAttributes(), file,row.names=FALSE)
-    }
-  )
+    })
   
+#download data
+output$downloadDataObject<- downloadHandler(
+filename = function(){paste0(input$datasets,".csv")},
+content = function(file) {
+  write.csv(currentDataObject(), file,row.names=FALSE)
+})
