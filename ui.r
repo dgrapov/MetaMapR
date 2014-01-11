@@ -131,7 +131,7 @@ shinyUI(pageWithSidebar(
 			),
 			br(), 
 			plotOutput("network",width = 850, height = 650))),#height = "100%"
-			# tabPanel("Debug", verbatimTextOutput("debug"))), # turn on off to see all input and values
+			tabPanel("Debug", verbatimTextOutput("debug"))),
 			conditionalPanel("updateBusy() || $('html').hasClass('shiny-busy')",
 				id='progressIndicator',
 				"Calculating...",

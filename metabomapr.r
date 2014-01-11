@@ -212,7 +212,8 @@ loadUserData <- function(uFile) {
 		values[[objname]] <- data.frame(read.csv(uFile,header = input$csv_col_header, row.names=row.names))
 		# get pesky ".variables" in column names
 	}
-	datasets <<- unique(c(robjname,datasets))
+	# datasets <<- unique(c(robjname,datasets))
+	values$datasets <<- unique(c(robjname,datasets))
 }
 
 #load copy and paset field

@@ -14,4 +14,4 @@ shiny::runGitHub('MetaMapR','dgrapov')
 ### Information
 Version: MetaMapR (v1.2.0) released 12/24/13
 
-License: GNU General Public License (v3),[read more](https://github.com/dgrapov/MetaMapR/blob/master/LICENSE)
+License: GNU General Public License (v3), [read more](https://github.com/dgrapov/MetaMapR/blob/master/LICENSE)
