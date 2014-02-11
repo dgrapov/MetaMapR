@@ -238,10 +238,16 @@ loadcopyAndPaste <- function(pFile) {
 }
 
 #reactive datasets also disable use in output$datasets
-r.datasets<-reactive({values$datasets})
+r.datasets<-reactive({
+values$datasets
+# tmp<-values$datasets
+# if(is.null(tmp)){tmp<-""}
+# return(tmp)
+
+})
 
 #################################################
-# reactive borrowed from radyant
+# reactive from radiant
 #################################################
 
 uploadfunc <- reactive({
@@ -347,7 +353,7 @@ translation.options<-function(){
 output$data_translation_options<-renderUI({
 	wellPanel(	
 	checkboxInput(inputId = "CTS_translate", label = "",value=FALSE),
-	 h4('Identifier Translations'),
+	 h4('Translate'),
 	 conditionalPanel(condition = "input.CTS_translate",
 		selectInput(inputId = "CTS_translate_id", label = "Translate:", choices = varnames(), selected = varnames()[1], multiple = FALSE),
 		selectInput(inputId = "CTS_translate_from", label = "From:", choices = translation.options(), selected = translation.options()[1], multiple = FALSE),
@@ -365,10 +371,6 @@ output$data_translation_options<-renderUI({
 		)
 	)	
 })
-
-# CTS_id<-reactive({as.list(getdata(),input$CTS_translate_id)})
-# CTS_from<-reactive({input$CTS_translate_from})
-# CTS_to<-reactive({input$CTS_translate_to})
 
 #CTS translation function
 CTS_calculate_translations<-reactive({
@@ -578,6 +580,17 @@ calculate_edgelist<-reactive({#function(){
 		res<-res[id,]
 	}
 	
+	values$edge.list_for.network<-res # need to fix but translations mess network plotter up (should be node names any way so fix by using two objects)
+	#optionally translate edge ids to a supplied index
+	if(!input$translate_edge_index=="none"){
+		tmp.id<-getdata()[,input$translate_edge_index]
+		
+		trans.s<-translate.index(fixlc(res[,1]), lookup=cbind(1:nrow(getdata()),fixlc(tmp.id)))
+		trans.t<-translate.index(fixlc(res[,2]), lookup=cbind(1:nrow(getdata()),fixlc(tmp.id)))
+		res$source<-as.numeric(trans.s)
+		res$target<-as.numeric(trans.t)
+		node.attr$network.index<-tmp.id
+	} else {}
 	#save for other functions access
 	
 	values$edge.list<-res	
@@ -598,6 +611,61 @@ make.edge.list.index<-function(edge.names, edge.list){
 	colnames(tmp)<-c("source","target")
 	return(as.matrix(tmp)) #
 }
+
+#upload data
+output$network_data_upload<-renderUI({
+		
+	wellPanel(
+		 checkboxInput(inputId = "upload_data_object", label = "",value=FALSE),
+		 h4('Upload'),
+		 conditionalPanel(condition = "input.upload_data_object",
+			 withTags(div(class='row-fluid',
+							 div(class='span3', checkboxInput(inputId = "csv_row_header", label = "row names",value=TRUE)),
+							 div(class='span5', checkboxInput(inputId = "csv_col_header", label = "column names",value=TRUE)))
+							 ),
+			HTML("<label>Load data: (.csv)</label>"),
+			uiOutput("upload_local_server"),
+			HTML("<label>Paste data:</label>"),
+			tags$textarea(id="copyAndPaste", rows=3, cols=40, "")
+		)		
+	)	
+		
+})
+
+#manage data
+output$network_data_manage<-renderUI({	
+	wellPanel(
+		 checkboxInput(inputId = "manage_data_object", label = "",value=FALSE),
+		 h4('Manage'),
+		 conditionalPanel(condition = "input.manage_data_object",
+			selectInput(inputId = "manage_datasets", label = "Dataset:", choices = c("----"="none",r.datasets()), multiple = TRUE),
+			br(),
+			actionButton("remove_network_dataset", "Remove Data Set")
+		)		
+	)		
+})
+
+
+#watcher for data manage
+# from Radiant
+observe({
+  if(is.null(input$remove_network_dataset) || input$remove_network_dataset == 0||input$manage_datasets=="none") return()
+  isolate({
+    for(i in 1:length(input$manage_datasets)) {
+      values[[input$manage_datasets[i]]] <- NULL
+    }
+    # datasets <<- datasets[-which(datasets == input$datasets)]
+    datasets <- values[['datasets']]
+    if(length(datasets) == length(input$removeDataset)) {
+      datasets <- ""
+    } else {
+      # datasets <- datasets[-which(datasets == input$removeDataset)]
+      datasets <- datasets[-which(datasets %in% input$manage_datasets)]
+    }
+
+    values[['datasets']] <- datasets
+  })
+})
 
 #biochemical connections args
 output$network_index_info_bio<-renderUI({
@@ -667,6 +735,11 @@ output$node_names<-renderUI({
 selectInput(inputId = "node_names", label ="Names", choices = Nodenames(), selected = varnames()[1], multiple = FALSE)
 })
 
+#translate edge ids to a supplied index
+output$translate_edge_index<-renderUI({
+	selectInput(inputId = "translate_edge_index", label = "Edge index:", choices = c("row number"="none",varnames()), selected = "row number", multiple = FALSE)
+})
+
 # Generate output for the summary tab
 # output$summary <- renderUI(function() {
 output$edge_list <- renderTable({
@@ -690,13 +763,13 @@ output$network <- renderPlot({
 	isolate({
 		calculate_edgelist()
 		# if(!input$metabomapr == "Network") return()
-		if(is.null(values$edge.list)) { 
+		if(is.null(values$edge.list_for.network)) { 
 			plot(x = 1, type = 'n', main="Please calculate edge list first.", axes = FALSE, xlab = "", ylab = "")
 		} else if(length(values$edge.list) == 0) { 
 			plot(x = 1, type = 'n', main="No connections fit set criteria.", axes = FALSE, xlab = "", ylab = "")
 		} else {
 		
-			edge.list<-values$edge.list
+			edge.list<-values$edge.list_for.network
 			#trying to avoid strange errors with factors
 			names<-colnames(edge.list)[1:2]
 			edge.list[,1]<-fixln(edge.list[,1,drop=FALSE])

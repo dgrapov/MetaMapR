@@ -16,81 +16,22 @@ shinyUI(pageWithSidebar(
   sidebarPanel
   (
 	  getTool("tool"), # navbar
-		# wellPanel(
-					# h3('Data'),
-					# uiOutput("datasets"),
-					# tags$details(tags$summary("Upload Options"),
-					# withTags(div(class='row-fluid',
-						 # div(class='span3', checkboxInput(inputId = "csv_row_header", label = "row names",value=TRUE)),
-						 # div(class='span5', checkboxInput(inputId = "csv_col_header", label = "column names",value=TRUE)))
-						 # ),
-					# HTML("<label>Load data: (.csv)</label>"),
-					# uiOutput("upload_local_server"),
-					# HTML("<label>Paste data:</label>"),
-					# tags$textarea(id="copyAndPaste", rows=3, cols=40, ""))
-		# ),
-		# wellPanel(		
-					# h3('Network Options'),
-
-					# # tags$details(
-						# uiOutput("network_index_info_bio"),
-						# uiOutput("network_index_info_chem"),
-						# uiOutput("network_index_info_spec"),
-						# uiOutput("network_index_info_cor"),
-					# # ),
-					# tags$details(tags$summary("More Options"),checkboxInput(inputId = "unique_edges", label = "Unique edges",value=FALSE))
-
-					# # selectInput(inputId = "edge_type", label = "Edge Type:", choices = 
-					# # # list( "Biochemical" = "kegg", "Chemical" = "tanimoto", "Spectral" = "ms") , selected = "Biochemical", multiple = TRUE),
-					# # conditionalPanel(condition = "input.edge_type != 'kegg'",
-						# # numericInput(inputId = "tanimoto_cutoff" , "cutoff", value = 0.7, min = 0, max = 1, step = .005)
-					# # ),
-					# # conditionalPanel(condition = "input.edge_type[1] == 'tanimoto'",
-						# # checkboxInput(inputId = "unique_edges", label = "Unique edges?",value=TRUE)
-					# # )#,
-					# # br()#, 
-					# # actionButton("calculate_edges", "Calculate") # only calculates when on edge list tab and needs a controller to not go fully reactive
-					# # submitButton("Calculate") # holds up everything...which is bad
-				# )	
-		# using TABSET		
-		# tabsetPanel( id = "sidepanel",
-			# tabPanel("Data",list(
-				# h3('Data'),
-					# uiOutput("datasets"),
-					# tags$details(tags$summary("Upload Options"),
-					# withTags(div(class='row-fluid',
-						 # div(class='span3', checkboxInput(inputId = "csv_row_header", label = "row names",value=TRUE)),
-						 # div(class='span5', checkboxInput(inputId = "csv_col_header", label = "column names",value=TRUE)))
-						 # ),
-					# HTML("<label>Load data: (.csv)</label>"),
-					# uiOutput("upload_local_server"),
-					# HTML("<label>Paste data:</label>"),
-					# tags$textarea(id="copyAndPaste", rows=3, cols=40, ""))
-				# )
-			# ),		
-			# tabPanel("Network",list(	
-					# h3('Network Options'),
-					# uiOutput("network_index_info_bio"),
-					# uiOutput("network_index_info_chem"),
-					# uiOutput("network_index_info_spec"),
-					# uiOutput("network_index_info_cor"),
-					# tags$details(tags$summary("More Options"),checkboxInput(inputId = "unique_edges", label = "Unique edges",value=FALSE))
-					# )
-			# )
-		# )
+		
 		#using NAVBAR
 		conditionalPanel(condition = "input.tool == 'data'|input.tool == 'dataview'",
 			h3('Data'),
 				uiOutput("datasets"),
-				tags$details(tags$summary("Upload Options"),
-				withTags(div(class='row-fluid',
-					 div(class='span3', checkboxInput(inputId = "csv_row_header", label = "row names",value=TRUE)),
-					 div(class='span5', checkboxInput(inputId = "csv_col_header", label = "column names",value=TRUE)))
-					 ),
-				HTML("<label>Load data: (.csv)</label>"),
-				uiOutput("upload_local_server"),
-				HTML("<label>Paste data:</label>"),
-				tags$textarea(id="copyAndPaste", rows=3, cols=40, "")),
+				uiOutput("network_data_upload"),
+				# tags$details(tags$summary("Upload Options"),
+				# withTags(div(class='row-fluid',
+					 # div(class='span3', checkboxInput(inputId = "csv_row_header", label = "row names",value=TRUE)),
+					 # div(class='span5', checkboxInput(inputId = "csv_col_header", label = "column names",value=TRUE)))
+					 # ),
+				# HTML("<label>Load data: (.csv)</label>"),
+				# uiOutput("upload_local_server"),
+				# HTML("<label>Paste data:</label>"),
+				# tags$textarea(id="copyAndPaste", rows=3, cols=40, "")),
+				uiOutput("network_data_manage"),
 				uiOutput("data_translation_options")
 		),
 		conditionalPanel(condition = "input.tool == 'network'",		
@@ -99,7 +40,10 @@ shinyUI(pageWithSidebar(
 			uiOutput("network_index_info_chem"),
 			uiOutput("network_index_info_spec"),
 			uiOutput("network_index_info_cor"),
-			tags$details(tags$summary("More Options"),checkboxInput(inputId = "unique_edges", label = "Unique edges",value=FALSE))
+			tags$details(tags$summary("More Options"),
+				checkboxInput(inputId = "unique_edges", label = "Unique edges",value=TRUE),
+				uiOutput("translate_edge_index")
+				)
 		)		
 	),
 				
