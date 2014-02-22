@@ -15,3 +15,6 @@ shiny::runGitHub('MetaMapR','dgrapov')
 Version: MetaMapR (v1.2.0) released 12/24/13
 
 License: GNU General Public License (v3), [read more](https://github.com/dgrapov/MetaMapR/blob/master/LICENSE)
+
+###TODO
+ * bundle or source CTSgetR without using [Rtools](http://cran.r-project.org/bin/windows/Rtools/) (currently a requirement)
