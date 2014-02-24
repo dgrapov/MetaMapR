@@ -15,15 +15,20 @@ if(length(inst.libs) != 0) {
 	suppressWarnings(suppressPackageStartupMessages(sapply(inst.libs, require, character.only=TRUE)))
 }
 
-#identifier translations
-if(!require("CTSgetR")){
-install.packages("devtools")
-library(devtools)
-install_github(repo = "CTSgetR", username = "dgrapov")
-library(CTSgetR)
-}
+#identifier translations (load package)
+# if(!require("CTSgetR")){
+# install.packages("devtools")
+# library(devtools)
+# install_github(repo = "CTSgetR", username = "dgrapov")
+# library(CTSgetR)
+# }
 
-#source directly git repo
+#for some people loading CTSgetR causes errors
+# bundle all the code with MetaMapR until CTSgetR is on Cran
+source("CTS.R")
+
+
+#source directly git repo (should also bundle with the app)...
 sourceGitDirectory<-function(url="https://github.com/dgrapov/devium/tree/master/Shiny/Devium/tools/analysis", user="dgrapov"){
 	obj<-RCurl::getURL(url, ssl.verifypeer=FALSE)
 	#can't use XML::xmlParse(contents) or xmlToList(contents)... so hack
