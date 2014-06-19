@@ -4,11 +4,10 @@ library(shiny)
 source.local.dir("C:/Users/dgrapov/Dropbox/Devium/devium/R")
 
 #load MetaMapR
-runApp("C:\\Users\\D\\Dropbox\\Devium\\devium\\Shiny\\MetaMapR") # home PC
+runApp("C:\\Users\\D\\Dropbox\\Software\\MetaMapR") # home PC
 runApp("C:\\Users\\Node\\Dropbox\\Devium\\devium\\Shiny\\MetaMapR") # home laptop
-runApp("C:\\Users\\dgrapov\\Dropbox\\Devium\\devium\\Shiny\\MetaMapR") # work
-
-
+runApp("C:\\Users\\dgrapov\\Dropbox\\Software\\MetaMapR") # work
+runApp("/Users/dgrapov/Dropbox/Software/MetaMapR") # OSX
 
 
 # #test data for spectra and correlation

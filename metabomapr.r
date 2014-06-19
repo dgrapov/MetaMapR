@@ -1,7 +1,7 @@
 
 #ggplot based network drawing fxn
 ggplot2.network<-function(edge.list, edge.color.var = NULL, edge.color = NULL, directed = FALSE,
-						node.color = NULL, show.names = TRUE,node.names=NULL,
+						node.color = NULL, show.names = TRUE, node.names=NULL,
 						bezier = TRUE, node.size = 7,node.label.size = 5, max.edge.thickness = 2){
 	# edge list  = 2 column data.frame representing source and target. Columns over 2 will be sorted with edgelist. 
 	# edge.color.var = name of variable in edge list to use to color
@@ -124,8 +124,8 @@ ggplot2.network<-function(edge.list, edge.color.var = NULL, edge.color = NULL, d
 	new_theme_empty$plot.title <- element_blank()
 	new_theme_empty$axis.title <- element_blank()
 	new_theme_empty$plot.margin <- structure(c(0, 0, -1, -1), unit = "lines", valid.unit = 3L, class = "unit")
-    new_theme_empty$legend.text <-theme_text( size = 20)
-	new_theme_empty$legend.title    <-theme_text(size = 20 )  
+    new_theme_empty$legend.text <-element_text( size = 20)
+	new_theme_empty$legend.title    <-element_text(size = 20 )  
 	
 	#set default plotting variables
 	# Edge colors
