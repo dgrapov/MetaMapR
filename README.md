@@ -17,7 +17,7 @@ Alternatively download the .zip file, unzip and run the following code (example 
 library(shiny)
 shiny::runApp('~/../Desktop/MetaMapR-master/MetaMapR-master')
 ```
- 
+* NOTE: modify file paths for OSX and LINUX 
 ### Instructions
 * [Tutorial](http://ufpr.dl.sourceforge.net/project/metamapr/Metmapr%20v1.2.1%20tutorial%20v1.doc.pdf) (a more detailed version coming soon)
 * [Examples](http://dgrapov.github.io/MetaMapR/)
