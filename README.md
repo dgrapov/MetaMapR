@@ -28,4 +28,5 @@ License: GNU General Public License (v3), [read more](https://github.com/dgrapov
 
 ### TODO
 * fix double translations bug
+* add hashing for various edgelist to speed filtering
 

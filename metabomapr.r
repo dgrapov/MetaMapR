@@ -573,11 +573,17 @@ calculate_edgelist<-reactive({#function(){
 		
 	}
 	
-	#remove duplicate edges (may fail if transposed)
+	# remove self edges and duplicate edges
+	# respect edge type hierarchy
+	# type coming in previous row over writes those coming later for duplicated connections
 	if(input$unique_edges) {
-		id<-!duplicated(join.columns(res[,1:2]))
-		values$id<-id
-		res<-res[id,]
+		type<-factor(res$type,labels=unique(res$type),levels=unique(res$type),ordered=TRUE)
+		res$type<-type
+		res<-clean.edgeList(data=res)
+
+		# id<-!duplicated(join.columns(res[,1:2]))
+		# values$id<-id
+		# res<-res[id,]
 	}
 	
 	values$edge.list_for.network<-res # need to fix but translations mess network plotter up (should be node names any way so fix by using two objects)
