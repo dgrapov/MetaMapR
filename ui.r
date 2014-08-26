@@ -9,14 +9,16 @@
 # UI for app
 shinyUI(pageWithSidebar(
  
+ 
+	
  # title
   headerPanel(""),
-  
+ 
   # input
   sidebarPanel
   (
 	  getTool("tool"), # navbar
-		
+		tags$head(tags$script(src = "http://d3js.org/d3.v3.min.js")) , #for d3networks
 		#using NAVBAR
 		conditionalPanel(condition = "input.tool == 'data'|input.tool == 'dataview'",
 			h3('Data'),
@@ -66,15 +68,29 @@ shinyUI(pageWithSidebar(
 				tableOutput("node.attributes")),
 			tabPanel("Network", list(actionButton("create_edgelist_network", "Draw Network"),
 			tags$details( # options for network plotting
-				checkboxInput(inputId = "network_plot_show_name", label = "show names",value=TRUE),
-				uiOutput("node_names"),
-				checkboxInput(inputId = "network_plot_bezier", label = "curved edges",value=FALSE),
-				numericInput(inputId = "network_plot_edge_size", "edge thickness", min = 0, max = 20, value = 2, step = .25),
-				numericInput(inputId = "network_plot_name_size", "label size", min = 0, max = 20, value = 5, step = 1),
-				numericInput(inputId = "network_plot_node_size", "vertex size", min = 0, max = 20, value = 5, step = 1)
+				fluidRow(
+					column(2,
+					h5("Plot"),
+					  checkboxGroupInput(inputId="network_plot_type", label="Plot type", choices=c("interactive","static"),selected = c("interactive","static")) 
+					),
+					column(3,
+						h5("Nodes"),
+						checkboxInput(inputId = "network_plot_show_name", label = "show names",value=TRUE),
+						uiOutput("node_names"),
+						numericInput(inputId = "network_plot_name_size", "label size", min = 0, max = 20, value = 5, step = 1),
+						numericInput(inputId = "network_plot_node_size", "vertex size", min = 0, max = 20, value = 5, step = 1)
+					),
+					column(3,
+						h5("Edges"),
+						checkboxInput(inputId = "network_plot_bezier", label = "curved edges",value=FALSE),
+						numericInput(inputId = "network_plot_edge_size", "edge thickness", min = 0, max = 20, value = 2, step = .25)
+					)
+				  )
 			),
-			br(), 
-			plotOutput("network",width = 850, height = 650))),#height = "100%"
+			br(),	
+				htmlOutput('networkPlot'),
+				plotOutput("network",width = 850, height = 650)
+			)),#height = "100%"
 			tabPanel("Debug", verbatimTextOutput("debug"))),
 			conditionalPanel("updateBusy() || $('html').hasClass('shiny-busy')",
 				id='progressIndicator',

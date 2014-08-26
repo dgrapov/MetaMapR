@@ -2,19 +2,32 @@
 # for debugging
 options(width = 150, shiny.trace=TRUE)
 
+#load devium functions
+#source local directory to load devium fxns 
+source.local.dir<-function(wd){
+	o.dir<-getwd()
+	setwd(wd)
+	files<-dir()[unique(c(agrep(".r",dir()),agrep(".R",dir())))]
+	lapply(1:length(files),function(i) {tryCatch(source(files[i]),error=function(e){paste0("can't load-->",files[i])})
+	})
+	setwd(o.dir)
+}
+#development
+source.local.dir(Sys.glob(file.path("C:","Users","*","Dropbox","Devium","devium","R")))# for local devium fxns
+# for App
+# source.local.dir(paste0(getwd(),"/R")) # app
+#global storage objects
+values <- reactiveValues()
+
+
 
 # options(repos = c("http://cran.rstudio.com/"))
 #options(repos ="http://www.stats.ox.ac.uk/pub/RWin")
-libs <- c("tools","igraph","graph","reshape2","network","sna","Hmisc","ggplot2","RJSONIO","RCurl","plyr")
-#need more
+libs <- c("tools","igraph","graph","reshape2","network","sna","Hmisc","ggplot2","jsonlite","RCurl","plyr","d3Network")
+#load all packages
+check.get.packages(libs)
 
-available <- suppressWarnings(suppressPackageStartupMessages(sapply(libs, require, character.only=TRUE)))
-inst.libs <- libs[available == FALSE]
-if(length(inst.libs) != 0) {
-	install.packages(inst.libs, dependencies = TRUE)
-	suppressWarnings(suppressPackageStartupMessages(sapply(inst.libs, require, character.only=TRUE)))
-}
-
+#CTS
 #identifier translations (load package)
 # if(!require("CTSgetR")){
 # install.packages("devtools")
@@ -26,6 +39,10 @@ if(length(inst.libs) != 0) {
 #for some people loading CTSgetR causes errors
 # bundle all the code with MetaMapR until CTSgetR is on Cran
 source("CTS.R")
+#options for translations
+# CTS.options<-CTS.options()
+# save(CTS.options,file="CTS.options")
+values$CTS.options<-CTS.options()
 
 
 #source directly git repo (should also bundle with the app)...
@@ -54,7 +71,7 @@ tryCatch(sourceGitDirectory(url="https://github.com/dgrapov/devium/tree/master/R
 
 #set demo data
 #----------------------
-values <- reactiveValues()
+# values <- reactiveValues()
 TCA.kegg <- c("C15973","C00026","C05381","C15972","C00091","C00042","C05379","C00311","C00036","C00024","C00149","C00417","C00158","C00022","C05125","C16254","C00122","C16255","C00074")
 # TCA.CID<-CTSgetR(TCA.kegg, from="KEGG", to = "PubChem CID")
 TCA.CID <- c("[]","51", "440649","[]", "439161",   "1110",    "972",      "1198",     "970",      "6302",     "222656",   "643757",  "19782904", "1060",     "440568"  ,"[]", "21883788" ,"[]","1005" )
@@ -76,8 +93,7 @@ values$network_state<-""
 #options for translations
 # CTS.options<-CTS.options()
 # save(CTS.options,file="CTS.options")
-load("CTS.options")
-values$CTS.options<-CTS.options
+values$CTS.options<-CTS.options()
 
 
 

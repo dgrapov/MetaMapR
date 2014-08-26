@@ -1,118 +1,112 @@
-CTSgetR<-function(id,from,to,parallel=FALSE,async=FALSE,limit.values=TRUE,server="http://cts.fiehnlab.ucdavis.edu/service/convert"){ 
-		
-		options(warn=-1) 
-		
-		#get URL contents control the number of urls sent to avoid issues
-		message(cat("Getting translations...","\n"))
-		if(async){
-			tryCatch(out<-CTS.translate.async(server=server,from=from,to=to,id=id) ,error=function(e){stop("Check that CTS server is working")})
-		} else{
-			out<-CTS.translate(server=server,from=from,to=to,id=id,parallel=parallel) 
-		}
-		
-		#fxn to parse JSON		
-		.parseJSON<-function(obj,limit)
-			{
-					if(any(obj=="[]")) # no value from server
-					{
-							final<-data.frame(matrix("error",nrow=4))
-					} else {
-							if(limit==TRUE) #only return first answer
-							{ 
-								final<-tryCatch(data.frame(RJSONIO::fromJSON(obj))[1,,drop=FALSE],error=function(e){data.frame(matrix("error",ncol=4))})
-							} else {
-								final<-tryCatch(data.frame(RJSONIO::fromJSON(obj)),error=function(e){data.frame(matrix("error",ncol=4))})
-								if(nrow(final)>1) # combine multiple answers in a comma separated string
-									{
-										tmp<-paste(as.matrix(final[,4,drop=F]),collapse=",")
-										final[,4]<-tmp
-										final<-final[1,,drop=FALSE]
-									}
-							}
-					}
-				colnames(final)<-""
-				return(final)	
-			}
-			
-		message(cat("\n","Formatting output...","\n"))
-		if(parallel==TRUE){ # add progress bar
-				
-				cl.tmp = makeCluster(rep("localhost",Sys.getenv('NUMBER_OF_PROCESSORS')), type="SOCK")  # windows specific
-				registerDoSNOW(cl.tmp) 
-				#do work
-				out<-foreach(i=c(1:length(out))) %dopar% .parseJSON(out[i],limit=limit.values)
-				stopCluster(cl.tmp)	
-		} else {
-				 
-				out<-lapply(1:length(out),function(i,pb = txtProgressBar(min = 0, max = length(id), style = 3)){
-					setTxtProgressBar(pb, i)
-					.parseJSON(obj=out[i],limit=limit.values)})
-			}
-			
-		#parse  into a triple
-		tmp<-do.call("rbind",out)
-		tmp<-as.data.frame(cbind(from=id,result=as.character(unlist(tmp[,4,drop=FALSE]))))
-		colnames(tmp)<-c(from,to)
-		return(data.frame(tmp))
+CTSgetR<-function(id,from,to,async=FALSE,limit.values=TRUE,progress=TRUE,server="http://cts.fiehnlab.ucdavis.edu/service/convert"){ 
+
+	opts<-CTS.options()
+	if(!to%in%opts|!from%in%opts) {
+	
+	stop(paste0("The supplied to or from name is not in the list of available options.","\n",
+	"Did you mean from = '", opts[agrep(from,opts,ignore.case = TRUE)],"' and to = '",opts[agrep(to,opts,ignore.case = TRUE)],"'?", "\n",
+	"See CTS.options() for all available options.","\n"))
 	}
 
-CTS.translate<-function(server,from,to,id,parallel=FALSE){ #arguably parallel, seems more connection stable than asynchronous
+	
+	
+	if(progress) cat("Getting translations...","\n")
+	if(async){
+		out<-unlist(CTS.translate.async(server=server,from=from,to=to,id=id,...))
+		out<-lapply(1:length(out),function(i){out[i]})
+	} else{
+		out<-CTS.translate(server=server,from=from,to=to,id=id,progress=progress) 
+	}
+	
+	if(limit.values){ 
+		parser<-function(x){
+			tmp<-fromJSON(x)
+			tryCatch(tmp[,"result"]<-strsplit(fixlc(tmp[,"result"]),"/,")[[1]],error=function(e) {NULL})
+			return(tmp)
+		}
+		
+		res<-do.call("rbind",lapply(out,parser))
+		#format output
+		res$result<-sapply(1:length(res[,"result"]),function(i){
+				if(length(res[,"result"][[i]])==0) { ""
+				} else {
+					res[,"result"][[i]]
+				}
+			})
+						
+	} else {
+		res<-do.call("rbind",lapply(out,fromJSON))
+		#format output, could collapse on comma, not sure which is more useful?
+		res<-do.call("rbind",lapply(1:length(res[,"result"]),function(i){
+				if(length(res[,"result"][[i]])==0) { 
+					expand.grid(res[,"searchTerm"][[i]],"")
+				} else {
+					expand.grid(res[,"searchTerm"][[i]],res[,"result"][[i]])
+				}
+			}))
+		id<-res$Var1
+		res$result<-res$Var2 # getting ugly	
+			
+	}
+		
+	out<-data.frame(from=id,to=res$result)
+	colnames(out)<-c(from,to)	
+	return(out)
+	
+}
+	
+CTS.translate<-function(server,from,to,id,progress=TRUE){ #arguably parallel, seems more connection stable than asynchronous
 		#require("RCurl")
 		# results are returned as JSON encoded strings
 		id<-as.character(unlist(id))
 		url<-paste(server,from,to,id,sep="/")
 		url<-gsub("\\ ","%20",url) # fix spaces 
-		
-		if(parallel==TRUE){ # not clear if actuall improves speed, why RCurls was tried first
-				library(snow);library(doSNOW);library(foreach)
-				cl.tmp = makeCluster(rep("localhost",Sys.getenv('NUMBER_OF_PROCESSORS')), type="SOCK")  # windows specific
-				registerDoSNOW(cl.tmp) 
-				#do work
-				content<-as.character(unlist(foreach(i=c(1:length(id))) %dopar% readLines(url[i])))
-				stopCluster(cl.tmp)		
-				
-		} else {
-			content<-as.character(unlist(sapply(1:length(id), function(i, pb = txtProgressBar(min = 0, max = length(id), style = 3))
-				{
-					setTxtProgressBar(pb, i)
-					tryCatch(readLines(url[i]),error=function(e){"error"})
-				})))
-		}
-			return(content)
+		if(progress) pb <- txtProgressBar(min = 0, max = length(id), style = 3)
+		content<-lapply(1:length(id), function(i)
+			{
+				if(progress) setTxtProgressBar(pb, i)
+				readLines(url[i])
+			})
+		if(progress) close(pb)
+		return(content)
 }
 
-#asynchronous
-CTS.translate.async<-function(server,from,to,id){ # sometimes will not work due to loss of connection when webservices are overwhelemed
+#asynchronous, need to debug
+CTS.translate.async<-function(server,from,to,id,async.limit=100){ 
 		require("RCurl")
 		# results are returned as JSON encoded strings
+		# limit controls the maximum number of request per call to the server
 		id<-as.character(unlist(id))
 		url<-paste(server,from,to,id,sep="/")
 		url<-gsub("\\ ","%20",url) # fix spaces 
 		
-		# options(RCurlOptions = list(verbose = TRUE,
-                              # followlocation = TRUE,
-                              # autoreferer = TRUE,
-                              # nosignal = TRUE))
-		curl = getCurlHandle()					  				  
-		x<-getURL(url,  ssl.verifypeer = FALSE, useragent = "R", timeout=10, curl = curl, followlocation = TRUE) #not stable missing some ar
-		# issue on OSX with R locking up
-
+	
 		options(RCurlOptions = list(verbose = TRUE,
                               followlocation = TRUE,
                               autoreferer = TRUE,
                               nosignal = TRUE))
-		curl = getCurlHandle()					  				  
-		getURL(url,  ssl.verifypeer = FALSE, useragent = "R", timeout=10, curl = curl) #not stable missing some args
-		# con = multiTextGatherer(url)
-		# getURIAsynchronous(url, write = con)
+		curl = getCurlHandle()	
+		
+		if(is.null(async.limit)){
+			getURL(url,  ssl.verifypeer = FALSE, useragent = "R", timeout=10, curl = curl) #not stable missing some args
+		} else {
+			if(async.limit>=length(url)){async.limit<-length(url)-1}
+			cuts<-cut(1:length(url),breaks=seq(1,length(url),length.out=ceiling(length(url)/async.limit)+1),include.lowest = TRUE)
+			url.list<-split(url,cuts)
+			lapply(1:length(url.list), function(i) {
+				tmp.url<-url.list[[i]]
+				getURL(tmp.url,  ssl.verifypeer = FALSE, useragent = "R", timeout=10, curl = curl) # unstable for unclear reasons
+			} )
+		}
+
 
 }
 
 # get possible translations from CTS
 CTS.options<-function(){
-	options(warn=-1)	
-	url<-readLines("http://cts.fiehnlab.ucdavis.edu/service/convert/toValues")
-	RJSONIO::fromJSON(url)
+		options(warn=-1)	
+		url<-readLines("http://cts.fiehnlab.ucdavis.edu/service/convert/toValues")
+		fromJSON(url)
 	}
 
 #from one to multiple translations
@@ -126,9 +120,67 @@ multi.CTSgetR<-function(id, from, to ,...) {
   tmp  
 }
 
-# #test
-# id=c("C15973","C00026","C05381","C15972","C00091","C00042","C05379","C00311","C00036","C00024","C00149","C00417","C00158","C00022","C05125","C16254","C00122","C16255","C00074")
-# from="KEGG" 
-# to="KEGG"
-# multi.CTSgetR(id,from,to)
-# CTSgetR(id,to,from)
+#get InchIKey, KEGG and CID from CTS, KEGG and PubChem from name
+NametoKeyID<-function(name){
+	#get InchIKey, KEGG and CID from CTS, KEGG and PubChem
+	# fill in missing using InChI to key translations via CTS
+	# replace KEGG drug with compound
+	message(cat("Getting InChIKey \n"))
+	keys<-NametoInchI(name)
+	keyid<-fixlc(keys$id)
+	res<-as.matrix(multi.CTSgetR(id=keyid,from="InChIKey", to=c("KEGG","PubChem CID")))
+
+	#try to get missing IDs for missing InChIKeys
+	#KEGG
+	get.kegg<-c(1:nrow(res))[res[,"KEGG"]=="error"]
+	if(length(get.kegg)>0){
+		message(cat("Getting KEGG ID \n"))
+		kegg2<-NametoKEGG(name=name[get.kegg])
+		res[get.kegg,"KEGG"]<-fixlc(kegg2$KID)
+	}
+	#CID
+	get.cid<-c(1:nrow(res))[res[,"PubChem CID"]=="error"]
+	if(length(get.cid)>0){
+			message(cat("Getting PubChem CID \n"))
+		cid2<-NametoPubChem(name=name[get.cid],ID="cids", limit=TRUE)
+		res[get.cid,"PubChem CID"]<-fixlc(cid2$id)
+	} 
+	
+	#try to switch KEGG DRUG IDs to KIDs
+	is.D<-c(1:nrow(res))[grep("D",fixlc(res[,"KEGG"]))]
+	if(length(is.D)>0){
+		message(cat("Translating KEGG DRUG ids \n"))
+		kegg3<-NametoKEGG(name=name[is.D])
+		res[is.D,"KEGG"]<-fixlc(kegg3$KID)
+	}	
+	
+	return(data.frame(start.name=keys$start.name,matched.name=keys$name,res))
+}
+
+
+#convenience fxns
+fixln<-function(obj){as.numeric(as.character(unlist(obj)))}
+fixlc<-function(obj){as.character(unlist(obj))}
+
+test<-function(){
+	id<-c("C15973","C00026","C05381","C15972","C00091","C00042","C05379","C00311","C00036","C00024","C00149","C00417","C00158","C00022","C05125","C16254","C00122","C16255","C00074")
+	from<-"KEGG" 
+	to<-"PubChem CID"
+	CTSgetR(id,from,to)
+	
+	#asynchronous query of CTS (can be unstable)
+	CTSgetR(id,from,to,async=TRUE,async.limit=10)
+	
+	#multiple translations
+	id<-"KPGXRSRHYNQIFN-UHFFFAOYSA-N"
+	from<-"InChIKey"
+	to<-c("PubChem CID","KEGG")
+	multi.CTSgetR(id,from,to)
+	
+	#get all values for the translation
+	id <- c("QNAYBMKLOCPYGJ-REOHCLBHSA-N")
+	from <- "Human"
+	to <- "Chemical Name"
+	CTSgetR(id,from,to,limit.values=FALSE)
+	
+}	
