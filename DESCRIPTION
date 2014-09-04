@@ -1,9 +1,0 @@
-Package: MetaMapR
-Type: Package
-Title: A metabolomic network mapping tool.
-Version: 1.3
-Date: 2014-08-26
-Author: Dmitry Grapov
-Maintainer: <dgrapov@gmail.com>
-Description: Shiny based GUI for creating biochemical, structural similarity, mass spectral similarity and correlation based networks.
-License: GNU General Public License (v3)

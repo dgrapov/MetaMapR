@@ -61,35 +61,48 @@ shinyUI(pageWithSidebar(
 			# tabPanel("Data", tableOutput("view_data")),
 			tabPanel("Edge List", list(actionButton("create_edgelist", "Calculate Connections"),
 			downloadButton('downloadEdgeList', 'Download'),
-			br(),
-			br(),
+			htmlOutput('edgelist_error_message'),
+			# br(),
+			# br(),
 			tableOutput("edge_list"))),
 			tabPanel("Node Attributes",downloadButton('downloadNodeAttributes', 'Download'),
+				br(),
+				br(),
 				tableOutput("node.attributes")),
 			tabPanel("Network", list(actionButton("create_edgelist_network", "Draw Network"),
+			br(),
+			br(),
 			tags$details( # options for network plotting
 				fluidRow(
 					column(2,
 					h5("Plot"),
-					  checkboxGroupInput(inputId="network_plot_type", label="Plot type", choices=c("interactive","static"),selected = c("interactive","static")) 
+					  checkboxGroupInput(inputId="network_plot_type", label="Plot type", choices=c("interactive","static"),selected = c("interactive")),
+					  numericInput(inputId = "plot_output_width", "width", min = 0,  value = 850, step = 10),
+					  numericInput(inputId = "plot_output_height", "height", min = 0,  value = 850, step = 10),
+					  tags$style(type="text/css", "#plot_output_height     { width:50px;}"),
+					  tags$style(type="text/css", "#plot_output_width     { width:50px;}")
 					),
-					column(3,
+					column(2,
 						h5("Nodes"),
 						checkboxInput(inputId = "network_plot_show_name", label = "show names",value=TRUE),
 						uiOutput("node_names"),
 						numericInput(inputId = "network_plot_name_size", "label size", min = 0, max = 20, value = 5, step = 1),
-						numericInput(inputId = "network_plot_node_size", "vertex size", min = 0, max = 20, value = 5, step = 1)
+						numericInput(inputId = "network_plot_node_size", "vertex size", min = 0, max = 20, value = 5, step = 1),
+						tags$style(type="text/css", "#network_plot_name_size     { width:50px;}"),
+					    tags$style(type="text/css", "#network_plot_node_size     { width:50px;}"),
+						tags$style(type="text/css", "#node_names     { width:150px;}")
 					),
-					column(3,
+					column(2,
 						h5("Edges"),
 						checkboxInput(inputId = "network_plot_bezier", label = "curved edges",value=FALSE),
-						numericInput(inputId = "network_plot_edge_size", "edge thickness", min = 0, max = 20, value = 2, step = .25)
+						numericInput(inputId = "network_plot_edge_size", "edge thickness", min = 0, max = 20, value = 2, step = .25),
+						tags$style(type="text/css", "#network_plot_edge_size     { width:50px;}")
 					)
 				  )
 			),
 			br(),	
 				htmlOutput('networkPlot'),
-				plotOutput("network",width = 850, height = 650)
+				plotOutput("network")
 			)),#height = "100%"
 			tabPanel("Debug", verbatimTextOutput("debug"))),
 			conditionalPanel("updateBusy() || $('html').hasClass('shiny-busy')",

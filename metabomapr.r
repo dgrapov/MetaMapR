@@ -436,6 +436,14 @@ Nodeobjects <- function() {
 	if(is.null(res)) return (NULL) else return(res)
 }
 
+#get network node names
+get_node_names<-reactive({
+	if(is.null(input$node_names)) return("")
+	data<-getdata()
+	names<-tryCatch(data[,colnames(data)%in%input$node_names],error=function(e){1:nrow(data)})
+	return(fixlc(names))
+})
+
 #names of databas identifiers
 DB.names <- function() {
 	if(is.null(input$datasets)) return()
@@ -447,22 +455,16 @@ MZ.encode<-function(){
 	list("m/z : intensity" = "mz_int")
 }
 
-# MAIN function for edge list calculations
-#translate index and calculate edges # remove translation option
+
 #------------------------------------------
-calculate_edgelist<-reactive({
-	
-	#exit if no connections are chosen
-	if(!input$bio_edges&!input$chem_edges&!input$spec_edges&!input$cor_edges) {
-	
-		return(data.frame("Error"="Please set network options"))
-	
-	}
-	
-	#will be results
-	res<-data.frame(NULL)#data.frame(source=NULL,target=NULL,type=NULL,weight=NULL)
-	node.attr<-data.frame(network.index = 1:nrow(getdata())) # size depends on rows of data
-	
+# MAIN functions for edge list calculations
+# translate index and calculate edges # remove translation option
+# splitting into separate modules below into seperate
+#------------------------------------------
+
+#BIOCHEMICAL CONNETIONS
+calculate_kegg_edgelist<-reactive({
+
 	#Use KEGG RPAIRS for biochemical  connections (could add option for reaction type, currently only reporting "main" reactions)
 	if(input$bio_edges){
 		index<-getdata()[,input$network_index_bio]
@@ -473,38 +475,43 @@ calculate_edgelist<-reactive({
 					biocyc = "BioCyc",
 					inchikey = "InChiKey"
 				)
-		
-	
-		trans.id<- !"KEGG"%in%index.type
-		if(trans.id){
-			kegg.id<-fixlc(CTSgetR(id = index, from=index.type,to="KEGG", async=TRUE)[,2])
-		} else {kegg.id<-index}
-		res<-data.frame(NULL)
-		if(!exists("reaction.DB")){
-			reaction.DB<-get.KEGG.pairs(type="main")
-		}# can add other types of relationships, main = direct precursor -> direct transformations
-		# index.translation.DB<-data.frame(cids,kegg.ids)
-		#get reaction pairs
-		kegg.edges<-get.Reaction.pairs(kegg.id,reaction.DB,index.translation.DB=NULL,parallel=FALSE,translate=FALSE)
+			
+		if(is.null(values$reaction.DB)){
+			values$reaction.DB<-get.KEGG.pairs(type="main")
+		}
+			
+		#carry out translations
+		kegg.id<-index
+		kegg.edges<-tryCatch(get.Reaction.pairs(kegg.id,values$reaction.DB,index.translation.DB=NULL,parallel=FALSE,translate=FALSE),error=function(e){NULL})
 		
 		#create shared index between different edge ids
 		index<-kegg.id
-		edge.names<-data.frame(index, network.id = c(1:length(index)))
-		kegg.edges<-make.edge.list.index(edge.names,kegg.edges)
-		kegg.edges<-data.frame(as.matrix(kegg.edges),type = "KEGG", weight = 2)
+		if(!is.null(kegg.edges)){
+			edge.names<-data.frame(index, network.id = c(1:length(index)))
+			kegg.edges<-make.edge.list.index(edge.names,kegg.edges)
+			kegg.edges<-data.frame(as.matrix(kegg.edges),type = "KEGG", weight = 2)
+			values$edgelist.error.message$kegg<-""
+		} else {
+			values$edgelist.error.message$kegg<-"Could not find any matches to the supplied KEGG identifier(s).\n"
+			kegg.edges<-NULL#data.frame(source=NULL,target=NULL,type=NULL,weight=NULL) # to help bind later
+		}
 		
 		#store objects for later filter
 		values$tmp.edge.list$kegg<-kegg.edges
 		values$tmp.node.info$biochemical.edge.index<-index
-		
-		if(length(kegg.edges)>0){
-			res<-data.frame(rbind(res,kegg.edges))	
-			node.attr<-data.frame(cbind(node.attr,biochemical.edge.index  = index))	
-		}
-		
-	}
+	} else {
+		#store objects for later filter
+		values$tmp.edge.list$kegg<-NULL#data.frame(source=NULL,target=NULL,type=NULL,weight=NULL)
+		values$tmp.node.info$biochemical.edge.index<-NULL
+	}	
 	
-	#chemical similarity edges based on tanimoto coefficients from PubChem CID
+	values$bio_edge_state<-list(data=input$datasets,variable=input$network_index_chem)
+})
+
+#STRUCTURAL SIMILARITY
+calculate_tanimoto_edgelist<-reactive({
+
+	#calculate tanimoto similarity between molecular fingerprints
 	if(input$chem_edges){
 		index<-getdata()[,input$network_index_chem]
 		index.type<-switch(input$network_index_type_chem,
@@ -515,118 +522,170 @@ calculate_edgelist<-reactive({
 					inchikey = "InChiKey"
 				)
 	
-		trans.id<- !"PubChem CID"%in%index.type
-		if(trans.id){
-			CID.id<-fixlc(CTSgetR(id = index, from=index.type,to="PubChem CID")[,2])
-		} else {CID.id<-index}
-		
 		# get tanimoto similarity
-		tani.edges<-CID.to.tanimoto(cids=fixlc(CID.id), cut.off = 0, parallel=FALSE) # cut.off = input$tanimoto_cutoff
+		CID.id<-index
+		tani.edges<-tryCatch(CID.to.tanimoto(cids=fixlc(CID.id), cut.off = 0, parallel=FALSE),error=function(e){NULL}) # cut.off = input$tanimoto_cutoff
 		
-		#create shared index between diffrent edge ids
+		#create shared index between different edge ids
 		index<-CID.id
-		edge.names<-data.frame(index, network.id = c(1:length(index)))
-		tani.edges[,1:2]<-make.edge.list.index(edge.names,tani.edges)
-		tani.edges<-data.frame(as.matrix(tani.edges[,1:2]),type = "Tanimoto", weight = tani.edges[,3,])
+		if(!is.null(tani.edges)){
+			edge.names<-data.frame(index, network.id = c(1:length(index)))
+			tani.edges[,1:2]<-make.edge.list.index(edge.names,tani.edges)
+			tani.edges<-data.frame(as.matrix(tani.edges[,1:2]),type = "Tanimoto", weight = tani.edges[,3,])
+			values$edgelist.error.message$chem<-NULL
+		}	else {
+			values$edgelist.error.message$chem<-"Could not find any matches to the supplied PubChem identifier(s).\n"
+			tani.edges<-NULL#data.frame(source=NULL,target=NULL,type=NULL,weight=NULL) # to help bind later
+		}
+		
 		#store temporary full edge.list objects
 		values$tmp.edge.list$tanimoto<-tani.edges
 		values$tmp.node.info$chemical.edge.index<-index
-		
-		if(nrow(tani.edges)>0){
-			res<-data.frame(rbind(res,tani.edges))
-			node.attr<-data.frame(cbind(node.attr,chemical.edge.index  = index))	
-		} 
+	} else {
+		#store objects for later filter
+		values$tmp.edge.list$tanimoto<-NULL#data.frame(source=NULL,target=NULL,type=NULL,weight=NULL)
+		values$tmp.node.info$chemical.edge.index<-NULL
 	}
 	
-	#spectral similarity edges based on cosine correlation between m/z spectra
+	values$chem_edge_state<-list(data=input$datasets,variable=input$network_index_chem)
+	
+})
+
+#MASS SPECTRAL SIMILARITY
+calculate_mz_edgelist<-reactive({
+	
 	if(input$spec_edges){ #use 1 or 0 encoding to limit connections from known=1 to unknown = 0 (no 0-0)
 		index<-getdata()[,input$network_index_spec]
 		known<-input$network_spec_primary_nodes
-		if(!known == "0"){known<-getdata()[,known]} # long story
+		if(!known == "0"){known<-getdata()[,known]} # long story bro
 	
 		if(input$network_spec_retention_index=="0"){retention.index<-NULL} else {retention.index<-getdata()[,input$network_spec_retention_index]}
-		spec.edges<-get.spectral.edge.list(spectra = index, known = known, 
+		spec.edges<-tryCatch(get.spectral.edge.list(spectra = index, known = known, 
 							cutoff = input$spec_cutoff, edge.limit = input$network_spec_nodes_max,
-							retention.index=retention.index,retention.cutoff=input$network_spec_retention_index_cutoff)
+							retention.index=retention.index,retention.cutoff=input$network_spec_retention_index_cutoff), error=function(e){NULL})
 		
-		spec.edges<-data.frame(as.matrix(spec.edges[,1:2]),type = "m/z", weight = spec.edges[,3])
-		#store objects for later filter
-		# remove filtration from the top object
-		values$tmp.edge.list$spec.edges<-spec.edges
+		
+		#create shared index between different edge ids
+		if(!is.null(spec.edges)){
+			# edge.names<-data.frame(index, network.id = c(1:length(index))) # done internally to the function which should be ok as long ass all objects are submitted 
+			# spec.edges[,1:2]<-make.edge.list.index(edge.names,spec.edges)
+			spec.edges<-data.frame(as.matrix(spec.edges[,1:2]),weight = spec.edges[,3,],type = "m/z" )
+			values$edgelist.error.message$mz<-NULL
+		}	else {
+			values$edgelist.error.message$mz<-"Error calculating mass spectral similarities.\n"
+			spec.edges<-NULL#data.frame(source=NULL,target=NULL,type=NULL,weight=NULL) # to help bind later
+		}
+		
+		#store temporary full edge.list objects
+		values$tmp.edge.list$mz<-spec.edges
 		values$tmp.node.info$mass.spectral.edge.index<-index
-		
-		if(nrow(spec.edges)>0){
-			res<-data.frame(rbind(res,spec.edges))
-			node.attr<-data.frame(cbind(node.attr,mass.spectral.edge.index  = index))	
-		} 
+				
+	} else {
+		#store objects for later filter
+		values$tmp.edge.list$mz<-NULL#data.frame(source=NULL,target=NULL,type=NULL,weight=NULL)
+		values$tmp.node.info$mass.spectral.edge.index<-NULL
 	}
 	
-	#edges based on correlation
-	if(input$cor_edges){
-		data<-getdata()[,input$network_index_cor]
-		tmp.data<-t(data)
-		colnames(tmp.data)<-1:nrow(data)
-		cor.edges<-devium.calculate.correlations(tmp.data,type=input$network_index_type_cor, results = "edge list")            
-		
-		
-		# values$tmp.node.info$cor.edge.index<-index see lower
-		
-		# #fdr adjust trade p-value for q-value
-		# if(input$cor_edges_fdr) { 
-				# # q.val<-FDR.adjust(obj = fixln(tmp[,4]),type="pvalue")
-				# adj.p<-p.adjust(fixln(tmp[,4]), method="BH")
-				# adj.p[is.na(as.numeric(adj.p))]<- 0 # error vars, assume due cor =1
-				# tmp[,4]<-adj.p
-			# }
-		 
-		# #filter change this to happen externally
-		# cor.edges<-tmp[fixln(tmp[,4]) <= input$cor_cutoff,]
-		
-		if(nrow(cor.edges)>0){
-			type<-rep(paste("positive",input$network_index_type_cor),nrow(cor.edges))
-			type[fixln(cor.edges[,3])<=0]<-paste("negative",input$network_index_type_cor)
-			cor.edges<-data.frame(as.matrix(cor.edges[,1:2]),type = type, weight = abs(fixln(cor.edges[,3])),p.values=fixln(cor.edges[,4]))
-			
-			#store temporary results	
-			values$tmp.node.info$cor.edge.index<-1:nrow(data)
-			values$tmp.edge.list$cor.edges<-cor.edges
-		} 
-	}
-	
-	# # remove self edges and duplicate edges
-	# # respect edge type hierarchy
-	# # type coming in previous row over writes those coming later for duplicated connections
-	# if(input$unique_edges) {
-		# type<-factor(res$type,labels=unique(res$type),levels=unique(res$type),ordered=TRUE)
-		# res$type<-type
-		# res<-clean.edgeList(data=res)
-	# }
-	
-	# values$edge.list_for.network<-res # need to fix but translations mess network plotter up (should be node names any way so fix by using two objects)
-	
-	# #optionally translate edge ids to a supplied index
-	if(!input$translate_edge_index=="none"){
-		tmp.id<-getdata()[,input$translate_edge_index]
-		# trans.s<-translate.index(fixlc(res[,1]), lookup=cbind(1:nrow(getdata()),fixlc(tmp.id)))
-		# trans.t<-translate.index(fixlc(res[,2]), lookup=cbind(1:nrow(getdata()),fixlc(tmp.id)))
-		# res$source<-as.numeric(trans.s)
-		# res$target<-as.numeric(trans.t)
-		# node.attr$network.index<-tmp.id
-		values$tmp.node.info$network.index<-tmp.id
-	} 
-	# #save for other functions access
-	
-	# values$edge.list<-res	
-	# if(all(dim(res)==0)){res<-data.frame("Error"="Please set network options")}
-	# values$node.attributes<-node.attr
-	# return(values$edge.list)
+	values$mz_edge_state<-list(data=input$datasets,variable=input$network_index_spec,known = input$network_spec_primary_nodes, 
+							cutoff = input$spec_cutoff, edge.limit = input$network_spec_nodes_max,
+							retention.index=input$network_spec_retention_index,retention.cutoff=input$network_spec_retention_index_cutoff)
 })
 
+# #complete
+# calculate_edgelist<-reactive({
+	
+	
+	
+	# #spectral similarity edges based on cosine correlation between m/z spectra
+	# if(input$spec_edges){ #use 1 or 0 encoding to limit connections from known=1 to unknown = 0 (no 0-0)
+		# index<-getdata()[,input$network_index_spec]
+		# known<-input$network_spec_primary_nodes
+		# if(!known == "0"){known<-getdata()[,known]} # long story
+	
+		# if(input$network_spec_retention_index=="0"){retention.index<-NULL} else {retention.index<-getdata()[,input$network_spec_retention_index]}
+		# spec.edges<-get.spectral.edge.list(spectra = index, known = known, 
+							# cutoff = input$spec_cutoff, edge.limit = input$network_spec_nodes_max,
+							# retention.index=retention.index,retention.cutoff=input$network_spec_retention_index_cutoff)
+		
+		# spec.edges<-data.frame(as.matrix(spec.edges[,1:2]),type = "m/z", weight = spec.edges[,3])
+		# #store objects for later filter
+		# # remove filtration from the top object
+		# values$tmp.edge.list$spec.edges<-spec.edges
+		# values$tmp.node.info$mass.spectral.edge.index<-index
+		
+		# if(nrow(spec.edges)>0){
+			# res<-data.frame(rbind(res,spec.edges))
+			# node.attr<-data.frame(cbind(node.attr,mass.spectral.edge.index  = index))	
+		# } 
+	# }
+	
+	# #edges based on correlation
+	# if(input$cor_edges){
+		# data<-getdata()[,input$network_index_cor]
+		# tmp.data<-t(data)
+		# colnames(tmp.data)<-1:nrow(data)
+		# cor.edges<-devium.calculate.correlations(tmp.data,type=input$network_index_type_cor, results = "edge list")            
+		
+		
+		# # values$tmp.node.info$cor.edge.index<-index see lower
+		
+		# # #fdr adjust trade p-value for q-value
+		# # if(input$cor_edges_fdr) { 
+				# # # q.val<-FDR.adjust(obj = fixln(tmp[,4]),type="pvalue")
+				# # adj.p<-p.adjust(fixln(tmp[,4]), method="BH")
+				# # adj.p[is.na(as.numeric(adj.p))]<- 0 # error vars, assume due cor =1
+				# # tmp[,4]<-adj.p
+			# # }
+		 
+		# # #filter change this to happen externally
+		# # cor.edges<-tmp[fixln(tmp[,4]) <= input$cor_cutoff,]
+		
+		# if(nrow(cor.edges)>0){
+			# type<-rep(paste("positive",input$network_index_type_cor),nrow(cor.edges))
+			# type[fixln(cor.edges[,3])<=0]<-paste("negative",input$network_index_type_cor)
+			# cor.edges<-data.frame(as.matrix(cor.edges[,1:2]),type = type, weight = abs(fixln(cor.edges[,3])),p.values=fixln(cor.edges[,4]))
+			
+			# #store temporary results	
+			# values$tmp.node.info$cor.edge.index<-1:nrow(data)
+			# values$tmp.edge.list$cor.edges<-cor.edges
+		# } 
+	# }
+	
+	# # # remove self edges and duplicate edges
+	# # # respect edge type hierarchy
+	# # # type coming in previous row over writes those coming later for duplicated connections
+	# # if(input$unique_edges) {
+		# # type<-factor(res$type,labels=unique(res$type),levels=unique(res$type),ordered=TRUE)
+		# # res$type<-type
+		# # res<-clean.edgeList(data=res)
+	# # }
+	
+	# # values$edge.list_for.network<-res # need to fix but translations mess network plotter up (should be node names any way so fix by using two objects)
+	
+	# # #optionally translate edge ids to a supplied index
+	# if(!input$translate_edge_index=="none"){
+		# tmp.id<-getdata()[,input$translate_edge_index]
+		# # trans.s<-translate.index(fixlc(res[,1]), lookup=cbind(1:nrow(getdata()),fixlc(tmp.id)))
+		# # trans.t<-translate.index(fixlc(res[,2]), lookup=cbind(1:nrow(getdata()),fixlc(tmp.id)))
+		# # res$source<-as.numeric(trans.s)
+		# # res$target<-as.numeric(trans.t)
+		# # node.attr$network.index<-tmp.id
+		# values$tmp.node.info$network.index<-tmp.id
+	# } 
+	# # #save for other functions access
+	
+	# # values$edge.list<-res	
+	# # if(all(dim(res)==0)){res<-data.frame("Error"="Please set network options")}
+	# # values$node.attributes<-node.attr
+	# # return(values$edge.list)
+# })
+
 #function to apply filters to stored edge 
-#list object created by calculate_edgelist
+#list object created by calculate_X_edgelist
 #------------------------------------------
 final_edge_list_calculate<-reactive({
-
+	
+	print("FINAL EDGE LIST TRIGGERED")	
 	# isolate({ # not sure if required
 		# calculate_edgelist()
 	# })
@@ -656,19 +715,28 @@ final_edge_list_calculate<-reactive({
 			}	 
 			#filter change this to happen externally
 			tmp$cor.edges<-obj[adj.p <= input$cor_cutoff,!colnames(obj)%in%"p.values"]
-			values$FUCK1<-tmp
 	}
-	
 	
 	res<-data.frame(do.call("rbind",tmp))
 	
+	#remove duplicated edges based on
 	if(input$unique_edges) {
-		type<-factor(res$type,labels=unique(res$type),levels=unique(res$type),ordered=TRUE)
+		#hierarchy for removing duplicates (add ability to change later)
+		ord<-NULL
+		if(!is.null(tmp$kegg)) ord<-c(ord,"KEGG")
+		if(!is.null(tmp$tanimoto)) ord<-c(ord,"Tanimoto")
+		if(!is.null(tmp$cor.edges)) ord<-c(ord,"Positive Corr") # TODO: tricky because two components and name changes based on correlation type?
+		if(!is.null(tmp$mz)) ord<-c(ord,"m/z")
+		
+		type<-factor(res$type,levels=ord,ordered=TRUE)
 		res$type<-type
+		
 		res<-clean.edgeList(data=res)
+		
 	}
 	
 	#use for ggplot to IDs
+	res$type<-factor(res$type) # could maintain order based on unique edges
 	values$edge.list_for.network<-res # need to fix but translations mess network plotter up (should be node names any way so fix by using two objects)
 	
 	#optionally translate edge ids to a supplied index
@@ -680,7 +748,7 @@ final_edge_list_calculate<-reactive({
 		res$target<-as.numeric(trans.t)
 		node.attr$network.index<-tmp.id
 	} 
-
+	
 	values$edge.list<-res	
 	values$node.attributes<-data.frame(do.call("cbind",lapply(values$tmp.node.info,fixlc)))
 	colnames(values$node.attributes)<-names(values$tmp.node.info)
@@ -697,22 +765,38 @@ get.d3.Network<- reactive ({
 			
 			# edge.list<-clean.edgeList(data=edge.list)
 			# #need to translate index to include 0 and go in a decreasing order
-			edge.list[,1]<-edge.list[,1]-1
-			edge.list[,2]<-edge.list[,2]-1
+			edge.list[,1]<-fixln(edge.list[,1])-1
+			edge.list[,2]<-fixln(edge.list[,2])-1
 			# edge.list<-edge.list[order(edge.list[,1],edge.list[,2]),]
 			# #node info
-			node.info<-data.frame(name=values$node.names)
-			# values$FUCK<-list(cbind(edge.list,values$edge.list),node.info)
+			node.info<-data.frame(name=get_node_names())
+			
+			
+			#translate source target ids to node names for simple d3network
+			tmp<-fixln(edge.list[,1:2])
+			lookup<-data.frame(names=get_node_names())
+			rownames(lookup)<-fixlc(0:(nrow(lookup)-1))
+			
+			simple.edge.list<-edge.list
+
+			# values$Fuck.edges<-edge.list
+			source<-lookup[fixlc(edge.list[,1]),]
+			target<-lookup[fixlc(edge.list[,2]),]
+			simple.edge.list<-data.frame(source,target)	
+			# values$simple.edge.list<-simple.edge.list
+			# simple.edge.list<-simple.edge.list[order(simple.edge.list$source),]
+			# values$simple.edge.list<-simple.edge.list
 			
 			#names are ordered according to the source column
 			#could show groups based on clustering or not
 			node.info$group<-1#sample(1:10,nrow(node.info),replace = TRUE)
-			
-			return(list(edge.list=edge.list,node.info=node.info))
+
+			return(list(edge.list=edge.list,node.info=node.info,simple.edge.list=simple.edge.list))
 })
 
 # #reset inputs if no options are selected
 state.check<-reactive({
+	#all empty
 	if(sum(c(input$bio_edges, input$chem_edges, input$spec_edges, input$cor_edges))==0){
 		values$edge.list<-NULL
 		values$node.attributes<-NULL
@@ -720,9 +804,15 @@ state.check<-reactive({
 		#temporary objects used for filtering
 		values$tmp.edge.list<-NULL
 		values$tmp.node.info<-NULL
+		values$edgelist.error.message<-NULL
 	} 
+	
+	
 })
 
+#check initialization state
+
+#trigger state reset if no options are set
 observe({
 	check<-list(input$bio_edges, input$chem_edges, input$spec_edges, input$cor_edges)
 	res<-sapply(check,is.null)
@@ -730,16 +820,67 @@ observe({
 	state.check()
 })
 
-#trigger calculation from action button
+#control state for each module
 observe({
 	if(input$create_edgelist==0&input$create_edgelist_network == 0) return()
+	if(!input$bio_edges) {
+		values$tmp.edge.list$kegg<-NULL
+		values$bio_edge_state<-NULL	
+	}
+	if(!input$chem_edges) {
+		values$tmp.edge.list$tanimoto<-NULL
+		values$chem_edge_state<-NULL	
+	}
+	if(!input$spec_edges) {
+		values$tmp.edge.list$mz<-NULL
+		values$mz_edge_state<-NULL	
+	}
+
+})
+
+#trigger calculation from action button
+observe({
+
+	if(input$create_edgelist==0&input$create_edgelist_network == 0) return()
 	isolate({
-		calculate_edgelist()
+	#having issues with calculations trigged when unrelated inputs change?
+		# values$edgelist.error.message<-NULL
+		# calculate_edgelist()
+		if(bio_edge_watcher()){
+			calculate_kegg_edgelist()
+		}
+		if(chem_edge_watcher()){
+			calculate_tanimoto_edgelist()
+		}
+		
+		if(mz_edge_watcher()){
+			calculate_mz_edgelist()
+		}
 		final_edge_list_calculate() # fast filter of stored results
 	})
 })
 
+#individual actionbuttons not working to trigger partial calculations
+#implement local state watchers
+chem_edge_watcher<-reactive({
+	if(input$create_edgelist==0&input$create_edgelist_network == 0) return()
+	cur.state<-list(data=input$datasets,variable=input$network_index_chem)
+	if(identical(cur.state,values$chem_edge_state)) return(FALSE) else return(TRUE)
+})
 
+bio_edge_watcher<-reactive({
+	if(input$create_edgelist==0&input$create_edgelist_network == 0) return()
+	cur.state<-list(data=input$datasets,variable=input$network_index_bio)
+	if(identical(cur.state,values$bio_edge_state)) return(FALSE) else return(TRUE)
+})
+
+mz_edge_watcher<-reactive({
+	if(input$create_edgelist==0&input$create_edgelist_network == 0) return()
+	cur.state<-list(data=input$datasets,variable=input$network_index_spec,known = input$network_spec_primary_nodes, 
+							cutoff = input$spec_cutoff, edge.limit = input$network_spec_nodes_max,
+							retention.index=input$network_spec_retention_index,retention.cutoff=input$network_spec_retention_index_cutoff)
+	if(identical(cur.state,values$mz_edge_state)) return(FALSE) else return(TRUE)					
+})
 
 #function to rencode index
 #relic needs to be replaced elsewhere
@@ -882,16 +1023,23 @@ output$translate_edge_index<-renderUI({
 	selectInput(inputId = "translate_edge_index", label = "Edge index:", choices = c("row number"="none",varnames()), selected = "row number", multiple = FALSE)
 })
 
-# Generate output for the summary tab
-# output$summary <- renderUI(function() {
-output$edge_list <- renderTable({
+#plot dimensions
+plot_height<-function(){
+	height <- try(input$plot_output_height)
+	if(is(height, 'try-error') || is.null(height)) {
+		height<-850
+	} 
+	return(height)
+}
 
-	#calculate edges		
-	# isolate({
-		values$edge.list
-	# })
-	 
-})
+plot_width<-function(){
+	width <- try(input$plot_output_width)
+	if(is(width, 'try-error') || is.null(width)) {
+		width<-850
+	} 
+	return(width)
+}
+
 
 # Generate ggplot2 network
 #-----------------------------
@@ -902,8 +1050,8 @@ output$network <- renderPlot({
 
 		#calculate edges and plot 		
 	isolate({
-		calculate_edgelist()
-		final_edge_list_calculate()
+		# calculate_edgelist()
+		# final_edge_list_calculate()
 		# if(!input$metabomapr == "Network") return()
 		if(is.null(values$edge.list_for.network)) { 
 			plot(x = 1, type = 'n', main="Please calculate edge list first.", axes = FALSE, xlab = "", ylab = "")
@@ -926,9 +1074,10 @@ output$network <- renderPlot({
 						
 		} else {""}
 		})
-	})	
+	},  height = plot_height,width =plot_width )	
 
-# Generate d3Network network
+
+# PLOTTING FUNCTIONS
 #-----------------------------
 # see http://bl.ocks.org/nsonnad/5982652 for colored links
 output$networkPlot<-renderPrint({
@@ -944,32 +1093,58 @@ output$networkPlot<-renderPrint({
 		} 
 		if(any(input$network_plot_type %in% "interactive")) {
 			# h4("D3 network goes here!")
-			d3ForceNetwork(Links = get.d3.Network()$edge.list, Nodes=get.d3.Network()$node.info,
-				   Source = "source", Target = "target", Value = "weight",
-				   NodeID = "name", Group = "group",height=650,width=850,
-				   opacity = 0.9,zoom=TRUE,standAlone = FALSE,
-							parentElement = '#networkPlot')	
-							
-			# d3SimpleNetwork(get.d3.Network()$edge.list,	height=650,width=850,
-				   # opacity = 0.9,standAlone = FALSE,fontsize = 12,
-							# parentElement = '#networkPlot')		
+			if(input$network_plot_show_name){
 			
-		}	else {return(h5(""))}
+				#need to translate numeric edge.list to node names
+				
+			
+				d3SimpleNetwork(get.d3.Network()$simple.edge.list,	height=plot_height(),width=plot_width(),
+					   opacity = 0.9,standAlone = FALSE,fontsize = 12,
+								parentElement = '#networkPlot')	
+			} else {	
+
+				d3ForceNetwork(Links = get.d3.Network()$edge.list, Nodes=get.d3.Network()$node.info,
+				   Source = "source", Target = "target", Value = "weight",
+				   NodeID = "name", Group = "group",height=plot_height(),width=plot_width(),
+				   opacity = 0.9,zoom=TRUE,standAlone = FALSE,
+							parentElement = '#networkPlot')		
+			}
+		}	else { return(h5(""))}
 	})
 })	
 	
 	
 #network attributes table
 output$node.attributes <- renderTable({
-	if (is.null(values$node.attributes)) 
-		return(data.frame(NULL))
+	
+	res<-data.frame(values$node.attributes)
+		rownames(res)<-NULL
+		return(res)
 		
-	#calculate edges		
-	isolate({
-		values$node.attributes
-	})
+
 	
 })
+
+# Generate output for the summary tab
+# output$summary <- renderUI(function() {
+output$edge_list <- renderTable({
+
+	#calculate edges		
+	# isolate({
+		res<-data.frame(values$edge.list)
+		rownames(res)<-NULL
+		return(res)
+	# })
+	 
+})
+
+
+#error messages for edge list calculation
+output$edgelist_error_message<-renderPrint({
+	if(is.null(values$edgelist.error.message)) {message<-"" } else { message<-paste0(unique(values$edgelist.error.message),collapse="") }
+	h5(message,style = "color:red")
+})
+
 
 #------------------------
 #downloading objects

@@ -13,9 +13,9 @@ source.local.dir<-function(wd){
 	setwd(o.dir)
 }
 #development
-source.local.dir(Sys.glob(file.path("C:","Users","*","Dropbox","Devium","devium","R")))# for local devium fxns
+# source.local.dir(Sys.glob(file.path("C:","Users","*","Dropbox","Devium","devium","R")))# for local devium fxns
 # for App
-# source.local.dir(paste0(getwd(),"/R")) # app
+source.local.dir(paste0(getwd(),"/R")) # app
 #global storage objects
 values <- reactiveValues()
 
@@ -45,29 +45,29 @@ source("CTS.R")
 values$CTS.options<-CTS.options()
 
 
-#source directly git repo (should also bundle with the app)...
-sourceGitDirectory<-function(url="https://github.com/dgrapov/devium/tree/master/Shiny/Devium/tools/analysis", user="dgrapov"){
-			obj<-RCurl::getURL(url, ssl.verifypeer=FALSE)
-			#can't use XML::xmlParse(contents) or xmlToList(contents)... so hack
-			tmp<-strsplit(obj,'href=\"/')
-			tmp2<-unlist(strsplit(as.character(unlist(tmp)),'class'))
-			#look for .R scripts
-			s1<-agrep("dgrapov",tmp2)
-			s2<-agrep(".R/",tmp2)
-			keep<-s1[s1%in%s2][-1] # the first entry is always wrong?
-			tmp3<-tmp2[keep]
+# #source directly git repo (should also bundle with the app)...
+# sourceGitDirectory<-function(url="https://github.com/dgrapov/devium/tree/master/Shiny/Devium/tools/analysis", user="dgrapov"){
+			# obj<-RCurl::getURL(url, ssl.verifypeer=FALSE)
+			# #can't use XML::xmlParse(contents) or xmlToList(contents)... so hack
+			# tmp<-strsplit(obj,'href=\"/')
+			# tmp2<-unlist(strsplit(as.character(unlist(tmp)),'class'))
+			# #look for .R scripts
+			# s1<-agrep("dgrapov",tmp2)
+			# s2<-agrep(".R/",tmp2)
+			# keep<-s1[s1%in%s2][-1] # the first entry is always wrong?
+			# tmp3<-tmp2[keep]
 
-			scripts<-paste0("https://raw.githubusercontent.com/",gsub('\" ',"",tmp3)) # fix formatting
-			scripts<-gsub("blob/","",scripts)
-			sapply(1:length(scripts),function(i)
-				{
-					tryCatch( eval( expr = parse( text = RCurl::getURL(scripts[i],
-								   ssl.verifypeer=FALSE) ),envir=.GlobalEnv),error=function(e){print(paste("can't load:",scripts[i]))})
-				})
+			# scripts<-paste0("https://raw.githubusercontent.com/",gsub('\" ',"",tmp3)) # fix formatting
+			# scripts<-gsub("blob/","",scripts)
+			# sapply(1:length(scripts),function(i)
+				# {
+					# tryCatch( eval( expr = parse( text = RCurl::getURL(scripts[i],
+								   # ssl.verifypeer=FALSE) ),envir=.GlobalEnv),error=function(e){print(paste("can't load:",scripts[i]))})
+				# })
 
-		}
+		# }
 
-tryCatch(sourceGitDirectory(url="https://github.com/dgrapov/devium/tree/master/R", user="dgrapov"), error=function(e){message("Can't access")}) 
+# tryCatch(sourceGitDirectory(url="https://github.com/dgrapov/devium/tree/master/R", user="dgrapov"), error=function(e){message("Can't access")}) 
 
 #set demo data
 #----------------------
