@@ -6,6 +6,7 @@
   )
 }
 
+
 # UI for app
 shinyUI(pageWithSidebar(
  
@@ -58,17 +59,7 @@ shinyUI(pageWithSidebar(
 	# conditionalPanel(condition = "input.sidepanel == 'Network'",	
 	conditionalPanel(condition = "input.tool == 'network'",
 		tabsetPanel( id = "metabomapr",
-			# tabPanel("Data", tableOutput("view_data")),
-			tabPanel("Edge List", list(actionButton("create_edgelist", "Calculate Connections"),
-			downloadButton('downloadEdgeList', 'Download'),
-			htmlOutput('edgelist_error_message'),
-			# br(),
-			# br(),
-			tableOutput("edge_list"))),
-			tabPanel("Node Attributes",downloadButton('downloadNodeAttributes', 'Download'),
-				br(),
-				br(),
-				tableOutput("node.attributes")),
+			#Network
 			tabPanel("Network", list(actionButton("create_edgelist_network", "Draw Network"),
 			br(),
 			br(),
@@ -76,7 +67,7 @@ shinyUI(pageWithSidebar(
 				fluidRow(
 					column(2,
 					h5("Plot"),
-					  checkboxGroupInput(inputId="network_plot_type", label="Plot type", choices=c("interactive","static"),selected = c("interactive")),
+					  checkboxGroupInput(inputId="network_plot_type", label="Plot type", choices=c("interactive","PNG","SVG"),selected = c("interactive")),
 					  numericInput(inputId = "plot_output_width", "width", min = 0,  value = 850, step = 10),
 					  numericInput(inputId = "plot_output_height", "height", min = 0,  value = 850, step = 10),
 					  tags$style(type="text/css", "#plot_output_height     { width:50px;}"),
@@ -94,7 +85,7 @@ shinyUI(pageWithSidebar(
 					),
 					column(2,
 						h5("Edges"),
-						checkboxInput(inputId = "network_plot_bezier", label = "curved edges",value=FALSE),
+						checkboxInput(inputId = "network_plot_bezier", label = "curved edges",value=FALSE), # only with renderPlot too slow for SVG
 						numericInput(inputId = "network_plot_edge_size", "edge thickness", min = 0, max = 20, value = 2, step = .25),
 						tags$style(type="text/css", "#network_plot_edge_size     { width:50px;}")
 					)
@@ -102,8 +93,23 @@ shinyUI(pageWithSidebar(
 			),
 			br(),	
 				htmlOutput('networkPlot'),
+				htmlOutput("SVGnetwork"),
 				plotOutput("network")
 			)),#height = "100%"
+
+			#edge list
+			tabPanel("Edge List", list(actionButton("create_edgelist", "Calculate Connections"),
+			downloadButton('downloadEdgeList', 'Download'),
+			htmlOutput('edgelist_error_message'),
+			# br(),
+			# br(),
+			tableOutput("edge_list"))),
+			#node attributes
+			tabPanel("Node Attributes",downloadButton('downloadNodeAttributes', 'Download'),
+				br(),
+				br(),
+				tableOutput("node.attributes")),
+			
 			tabPanel("Debug", verbatimTextOutput("debug"))),
 			conditionalPanel("updateBusy() || $('html').hasClass('shiny-busy')",
 				id='progressIndicator',

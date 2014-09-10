@@ -23,7 +23,8 @@ values <- reactiveValues()
 
 # options(repos = c("http://cran.rstudio.com/"))
 #options(repos ="http://www.stats.ox.ac.uk/pub/RWin")
-libs <- c("tools","igraph","graph","reshape2","network","sna","Hmisc","ggplot2","jsonlite","RCurl","plyr","d3Network")
+libs <- c("tools","igraph","graph","reshape2","network","sna","Hmisc",
+"ggplot2","jsonlite","RCurl","plyr","d3Network","grid","gridSVG","XML")
 #load all packages
 check.get.packages(libs)
 
@@ -107,3 +108,21 @@ values$CTS.options<-CTS.options()
       # </script>
 # ')
 
+
+#create empty html place holder for network svg
+emptyHTML<-function(file){
+		htmlhead <- 
+			'<!DOCTYPE html>
+			<head>
+			  <meta charset = "utf-8">
+			
+			</head>
+
+			<body>
+			'
+		sink(paste0(file,".html"))
+		cat(htmlhead)
+		#close our file
+		sink(file=NULL)
+	}
+emptyHTML(file="SVGnetwork")

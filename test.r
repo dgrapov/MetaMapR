@@ -5,7 +5,7 @@
 
 library(shiny)
 #if no internet load local devium scripts
-source.local.dir("C:/Users/dgrapov/Dropbox/Devium/devium/R")
+# source.local.dir("C:/Users/dgrapov/Dropbox/Devium/devium/R")
 
 #load MetaMapR
 runApp("C:\\Users\\D\\Dropbox\\Software\\MetaMapR") # home PC

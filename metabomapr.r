@@ -2,7 +2,7 @@
 #ggplot based network drawing fxn
 ggplot2.network<-function(edge.list, edge.color.var = NULL, edge.color = NULL, directed = FALSE,
 						node.color = NULL, show.names = TRUE, node.names=NULL,
-						bezier = TRUE, node.size = 7,node.label.size = 5, max.edge.thickness = 2){
+						bezier = TRUE, node.size = 7,node.label.size = 5, max.edge.thickness = 2,file=NULL){
 	# edge list  = 2 column data.frame representing source and target. Columns over 2 will be sorted with edgelist. 
 	# edge.color.var = name of variable in edge list to use to color
 	# edge.color = color for each level of object edge.color.var
@@ -80,7 +80,7 @@ ggplot2.network<-function(edge.list, edge.color.var = NULL, edge.color = NULL, d
 		values$network_state<-g
 	}
 	
-	#marker of a change in state
+	#marker of a change in state # not sure if used?
 	if(!identical(g,values$network_state)){
 		node.layout<<-gplot.layout.fruchtermanreingold(g[,], layout.par = NULL)
 		values$network_state<-g
@@ -112,9 +112,13 @@ ggplot2.network<-function(edge.list, edge.color.var = NULL, edge.color = NULL, d
 		allEdges <- do.call(rbind, allEdges)
 	}
 	allEdges$neg.Sequence<- - allEdges$Sequence
+	#need to maintain order of original edge.list$type
+	if(!is.null(edge.color.var)){
+		tmp<-with (edge.list, get(edge.color.var))
+		ord<-fixlc(levels(tmp))
+		allEdges[,edge.color.var]<-factor(allEdges[,edge.color.var],levels=ord,ordered=TRUE)
+	}	
 
-	
-	#set up for plotting
 	#theme 
 	new_theme_empty <- theme_bw()
 	new_theme_empty$line <- element_blank()
@@ -126,20 +130,26 @@ ggplot2.network<-function(edge.list, edge.color.var = NULL, edge.color = NULL, d
 	new_theme_empty$plot.margin <- structure(c(0, 0, -1, -1), unit = "lines", valid.unit = 3L, class = "unit")
     new_theme_empty$legend.text <-element_text( size = 20)
 	new_theme_empty$legend.title    <-element_text(size = 20 )  
+	new_theme_empty$legend.position <- "top"
+	new_theme_empty$plot.margin <- unit(x=c(5,5,5,5),units="mm") # need grid
 	
 	#set default plotting variables
 	# Edge colors
+	edge.guide <- TRUE
 	if(is.null(edge.color)){
 		if(is.null(edge.color.var)){
 			edge.color=rep("gray20",2) # no clue why 2 are needed as a default
 			edge.guide = FALSE
 		} else {
-			edge.color<-rainbow(nlevels(as.factor(with (edge.list, get(edge.color.var)))))
-			edge.guide = TRUE
+			# edge.color<-rainbow(nlevels(as.factor(with (edge.list, get(edge.color.var)))))
+			edge.color<-rainbow(nlevels(with (edge.list, get(edge.color.var))))
 		}
 	}
 	# node colors
 	if(is.null(node.color)){node.color <-"red"; node.guide = FALSE} else {node.guide = TRUE}
+	
+	#TODO: calculate x and y limits with some padding or ability to zoom out?
+	
 	
 	# # node names (set above)
 	# if(length(show.names) == attr(n.edge.list,"vnames")) { node.names <- show.names} 
@@ -157,14 +167,63 @@ ggplot2.network<-function(edge.list, edge.color.var = NULL, edge.color = NULL, d
 							aes(x = x, y = y-.2, label = label), size = node.label.size)	# node names
 	zp1 <- zp1 + scale_colour_manual(values = edge.color, guide = edge.guide)
 	zp1 <- zp1 + scale_size(range = c(1/100, max.edge.thickness), guide = "none")  #edge thickness
-	zp1 <-zp1 + guides(color = guide_legend(override.aes = list (size = 3 ))) + labs(color='Edge Type')	
-	# Customize gradient 
-	zp1 <- zp1 + new_theme_empty   # Clean up plot
-	print(zp1)
+	#style edges
+	zp1 <-zp1 + guides(color = guide_legend(override.aes = list (size = 3 ),title.position="top"))
+	# zp1 <-zp1 + scale_color_manual(values=edge.color,guide = guide_legend(legend.position ="top",direction="horizontal", nrow= 1))
+	zp1 <- zp1 + new_theme_empty + labs(color='Edge Type')	  # theme
+	if(is.null(file)){
+		print(zp1)
+	} else {	
+	
+	# create svg "panzoom_ggplot2.html"
+	# with zooming and panning (based on: http://www.r-bloggers.com/ggplot2-meet-d3/)
+	#--------------------------------
+	
+	#define a simple html head template
+		htmlhead <- 
+		'<!DOCTYPE html>
+		<head>
+		  <meta charset = "utf-8">
+		  <script src = "http://d3js.org/d3.v3.js"></script>
+		</head>
+
+		<body>
+		'
+		print(zp1)
+		#use gridSVG to export our plot to SVG
+		mysvg <- grid.export("panzoom1.svg")
+
+
+		#define a simple pan zoom script using d3  #gridSVG
+		panzoomScript <-
+		'  
+		<script>
+			var svg = d3.selectAll("#gridSVG");
+			svg.call(d3.behavior.zoom().scaleExtent([1, 8]).on("zoom", zoom))
+			
+			function zoom() {
+			  svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+			} 
+		  </script>
+		</body>
+		'
+
+		#combine all the pieces into an html file
+		# sink(paste0(file,".html"))
+		return(cat(htmlhead,saveXML(mysvg$svg),panzoomScript))# create html with cat
+		# close our file
+		# sink(file=NULL)
+		
+		# return(c(htmlhead,saveXML(mysvg$svg),panzoomScript)) # return as well
+		
+	}	
 }
 
 #debugging  print all names and values in input
 output$debug<- renderPrint({
+	if(!is.initialized()) return()
+	if(!input$metabomapr=="Debug") return()
+	
 	obj<-names(input)
 	input.obj<-lapply(1:length(obj), function(i) { input[[obj[i]]]})
 	names(input.obj)<-obj
@@ -554,6 +613,8 @@ calculate_tanimoto_edgelist<-reactive({
 #MASS SPECTRAL SIMILARITY
 calculate_mz_edgelist<-reactive({
 	
+	#TODO decouple correlation calculation from
+	# from filtering on retention time and strength
 	if(input$spec_edges){ #use 1 or 0 encoding to limit connections from known=1 to unknown = 0 (no 0-0)
 		index<-getdata()[,input$network_index_spec]
 		known<-input$network_spec_primary_nodes
@@ -591,33 +652,51 @@ calculate_mz_edgelist<-reactive({
 							retention.index=input$network_spec_retention_index,retention.cutoff=input$network_spec_retention_index_cutoff)
 })
 
-# #complete
-# calculate_edgelist<-reactive({
-	
-	
-	
-	# #spectral similarity edges based on cosine correlation between m/z spectra
-	# if(input$spec_edges){ #use 1 or 0 encoding to limit connections from known=1 to unknown = 0 (no 0-0)
-		# index<-getdata()[,input$network_index_spec]
-		# known<-input$network_spec_primary_nodes
-		# if(!known == "0"){known<-getdata()[,known]} # long story
-	
-		# if(input$network_spec_retention_index=="0"){retention.index<-NULL} else {retention.index<-getdata()[,input$network_spec_retention_index]}
-		# spec.edges<-get.spectral.edge.list(spectra = index, known = known, 
-							# cutoff = input$spec_cutoff, edge.limit = input$network_spec_nodes_max,
-							# retention.index=retention.index,retention.cutoff=input$network_spec_retention_index_cutoff)
+#CORRELATION
+calculate_cor_edgelist<-reactive({
+
+	#calculate correlation
+	if(input$cor_edges){
+		data<-getdata()[,input$network_index_cor]
+		tmp.data<-t(data) # flip to calculate correlations between variables and not samples
+		#could do samples and use MDS layout
+		colnames(tmp.data)<-1:nrow(data)
+		cor.edges<-tryCatch(devium.calculate.correlations(tmp.data,type=input$network_index_type_cor, results = "edge list"), error=function(e){NULL})            
 		
-		# spec.edges<-data.frame(as.matrix(spec.edges[,1:2]),type = "m/z", weight = spec.edges[,3])
-		# #store objects for later filter
-		# # remove filtration from the top object
-		# values$tmp.edge.list$spec.edges<-spec.edges
-		# values$tmp.node.info$mass.spectral.edge.index<-index
+		#create shared index between different edge ids
+		index<-1:nrow(data)
+		if(!is.null(cor.edges)){
+			#format for output
+			#FDR adjust
+			adj.p<-p.adjust(fixln(cor.edges[,4]), method="BH")#FDR.adjust(obj = fixln(cor.edges[,4]),type="pvalue")
+			adj.p[is.na(as.numeric(adj.p))]<- 0 # error vars, assume due cor =1
+			cor.edges$fdr.p.value<-adj.p
+			
+			#create edge type
+			type<-rep(paste("positive correlation"),nrow(cor.edges)) #,input$network_index_type_cor
+			type[fixln(cor.edges[,3])<=0]<-paste("negative correlation")
+			cor.edges<-data.frame(as.matrix(cor.edges[,1:2]),type = type, weight = abs(fixln(cor.edges[,3])),p.values=fixln(cor.edges[,4]),fdr.p.values=fixln(cor.edges$fdr.p.value))
+
+			values$edgelist.error.message$cor<-NULL
+		}	else {
+			values$edgelist.error.message$cor<-"Error in correlation calculation.\n"
+			cor.edges<-NULL#data.frame(source=NULL,target=NULL,type=NULL,weight=NULL) # to help bind later
+		}
 		
-		# if(nrow(spec.edges)>0){
-			# res<-data.frame(rbind(res,spec.edges))
-			# node.attr<-data.frame(cbind(node.attr,mass.spectral.edge.index  = index))	
-		# } 
-	# }
+		#store temporary full edge.list objects
+		values$tmp.edge.list$cor.edges<-cor.edges
+		values$tmp.node.info$correlation.edge.index<-index
+	} else {
+		#store objects for later filter
+		values$tmp.edge.list$cor.edges<-NULL#data.frame(source=NULL,target=NULL,type=NULL,weight=NULL)
+		values$tmp.node.info$correlation.edge.index<-NULL
+	}
+	
+	values$cor_edge_state<-list(data=input$datasets,variable=input$network_index_cor,method=input$network_index_type_cor)
+	
+})
+
+
 	
 	# #edges based on correlation
 	# if(input$cor_edges){
@@ -685,7 +764,7 @@ calculate_mz_edgelist<-reactive({
 #------------------------------------------
 final_edge_list_calculate<-reactive({
 	
-	print("FINAL EDGE LIST TRIGGERED")	
+	# print("FINAL EDGE LIST TRIGGERED")	
 	# isolate({ # not sure if required
 		# calculate_edgelist()
 	# })
@@ -703,18 +782,12 @@ final_edge_list_calculate<-reactive({
 	
 	#correlations
 	if(!is.null(tmp$cor.edges)){
-		obj<-data.frame(tmp$cor.edges)
-		#fdr adjust trade p-value for q-value
-			if(input$cor_edges_fdr) { 
-					# q.val<-FDR.adjust(obj = fixln(tmp[,4]),type="pvalue")
-					adj.p<-p.adjust(fixln(obj$p.values), method="BH")
-					adj.p[is.na(as.numeric(adj.p))]<- 0 # error vars, assume due cor =1
-					
-			}	else {
-				adj.p<-fixln(obj$p.values)
-			}	 
-			#filter change this to happen externally
-			tmp$cor.edges<-obj[adj.p <= input$cor_cutoff,!colnames(obj)%in%"p.values"]
+		
+		if(input$cor_edges_fdr) filter<-tmp$cor.edges$fdr.p.values else filter<-tmp$cor.edges$p.values
+		tmp$cor.edges<-tmp$cor.edges[filter <= input$cor_cutoff,c("source","target","type","weight")]
+		cor.levels<-fixlc(unique(tmp$cor.edges$type))
+		values$FUCKCKC<-NULL
+		values$FUCKCKC<-cor.levels
 	}
 	
 	res<-data.frame(do.call("rbind",tmp))
@@ -725,14 +798,13 @@ final_edge_list_calculate<-reactive({
 		ord<-NULL
 		if(!is.null(tmp$kegg)) ord<-c(ord,"KEGG")
 		if(!is.null(tmp$tanimoto)) ord<-c(ord,"Tanimoto")
-		if(!is.null(tmp$cor.edges)) ord<-c(ord,"Positive Corr") # TODO: tricky because two components and name changes based on correlation type?
+		if(!is.null(tmp$cor.edges)) ord<-c(ord,cor.levels) 
 		if(!is.null(tmp$mz)) ord<-c(ord,"m/z")
 		
 		type<-factor(res$type,levels=ord,ordered=TRUE)
 		res$type<-type
 		
 		res<-clean.edgeList(data=res)
-		
 	}
 	
 	#use for ggplot to IDs
@@ -811,18 +883,21 @@ state.check<-reactive({
 })
 
 #check initialization state
-
-#trigger state reset if no options are set
-observe({
+is.initialized<-reactive({
 	check<-list(input$bio_edges, input$chem_edges, input$spec_edges, input$cor_edges)
 	res<-sapply(check,is.null)
-	if(any(res)){ return() }
-	state.check()
+	if(any(res)) return(FALSE)  else return(TRUE)
+})
+	
+#trigger state reset if no options are set
+observe({
+	if(is.initialized()) state.check()
 })
 
 #control state for each module
 observe({
-	if(input$create_edgelist==0&input$create_edgelist_network == 0) return()
+	# if(input$create_edgelist==0&input$create_edgelist_network == 0) return()
+	if(!is.initialized()) return()
 	if(!input$bio_edges) {
 		values$tmp.edge.list$kegg<-NULL
 		values$bio_edge_state<-NULL	
@@ -835,7 +910,10 @@ observe({
 		values$tmp.edge.list$mz<-NULL
 		values$mz_edge_state<-NULL	
 	}
-
+	if(!input$cor_edges) {
+		values$tmp.edge.list$cor<-NULL
+		values$cor_edge_state<-NULL	
+	}
 })
 
 #trigger calculation from action button
@@ -843,37 +921,41 @@ observe({
 
 	if(input$create_edgelist==0&input$create_edgelist_network == 0) return()
 	isolate({
-	#having issues with calculations trigged when unrelated inputs change?
-		# values$edgelist.error.message<-NULL
-		# calculate_edgelist()
+
 		if(bio_edge_watcher()){
 			calculate_kegg_edgelist()
 		}
 		if(chem_edge_watcher()){
 			calculate_tanimoto_edgelist()
 		}
-		
+		if(cor_edge_watcher()){
+			calculate_cor_edgelist()
+		}
 		if(mz_edge_watcher()){
 			calculate_mz_edgelist()
 		}
+		
 		final_edge_list_calculate() # fast filter of stored results
 	})
 })
 
 #individual actionbuttons not working to trigger partial calculations
 #implement local state watchers
+#tanimoto
 chem_edge_watcher<-reactive({
 	if(input$create_edgelist==0&input$create_edgelist_network == 0) return()
 	cur.state<-list(data=input$datasets,variable=input$network_index_chem)
 	if(identical(cur.state,values$chem_edge_state)) return(FALSE) else return(TRUE)
 })
 
+#KEGG
 bio_edge_watcher<-reactive({
 	if(input$create_edgelist==0&input$create_edgelist_network == 0) return()
 	cur.state<-list(data=input$datasets,variable=input$network_index_bio)
 	if(identical(cur.state,values$bio_edge_state)) return(FALSE) else return(TRUE)
 })
 
+#mz
 mz_edge_watcher<-reactive({
 	if(input$create_edgelist==0&input$create_edgelist_network == 0) return()
 	cur.state<-list(data=input$datasets,variable=input$network_index_spec,known = input$network_spec_primary_nodes, 
@@ -881,6 +963,14 @@ mz_edge_watcher<-reactive({
 							retention.index=input$network_spec_retention_index,retention.cutoff=input$network_spec_retention_index_cutoff)
 	if(identical(cur.state,values$mz_edge_state)) return(FALSE) else return(TRUE)					
 })
+
+#correlation
+cor_edge_watcher<-reactive({
+	if(input$create_edgelist==0&input$create_edgelist_network == 0) return()
+	cur.state<-list(data=input$datasets,variable=input$network_index_cor,method=input$network_index_type_cor)
+	if(identical(cur.state,values$cor_edge_state)) return(FALSE) else return(TRUE)
+})
+
 
 #function to rencode index
 #relic needs to be replaced elsewhere
@@ -1041,25 +1131,25 @@ plot_width<-function(){
 }
 
 
-# Generate ggplot2 network
+#Generate ggplot2 network
 #-----------------------------
 output$network <- renderPlot({
 	
-	if (input$create_edgelist_network == 0) return("")
-		plot(x = 1, type = 'n', main="Please select options and draw the network.", axes = FALSE, xlab = "", ylab = "")
-
+	if (input$create_edgelist_network == 0) return()#return(plot(x = 1, type = 'n', main="", axes = FALSE, xlab = "", ylab = ""))
+	if(!any(input$network_plot_type%in%"PNG")) return()#return(plot(x = 1, type = 'n', main="", axes = FALSE, xlab = "", ylab = ""))
+		
 		#calculate edges and plot 		
 	isolate({
 		# calculate_edgelist()
 		# final_edge_list_calculate()
 		# if(!input$metabomapr == "Network") return()
 		if(is.null(values$edge.list_for.network)) { 
-			plot(x = 1, type = 'n', main="Please calculate edge list first.", axes = FALSE, xlab = "", ylab = "")
+			return()#plot(x = 1, type = 'n', main="Please calculate edge list first.", axes = FALSE, xlab = "", ylab = "")
 		} else if(length(values$edge.list) == 0) { 
-			plot(x = 1, type = 'n', main="No connections fit set criteria.", axes = FALSE, xlab = "", ylab = "")
+			return()#plot(x = 1, type = 'n', main="No connections fit set criteria.", axes = FALSE, xlab = "", ylab = "")
 		} 
 		
-		if(any(input$network_plot_type %in% "static")){
+		if(any(input$network_plot_type %in% "PNG")){
 		
 			edge.list<-values$edge.list_for.network
 			#trying to avoid strange errors with factors
@@ -1067,15 +1157,106 @@ output$network <- renderPlot({
 			edge.list[,1]<-fixln(edge.list[,1,drop=FALSE])
 			edge.list[,2]<-fixln(edge.list[,2,drop=FALSE])
 			colnames(edge.list)[1:2]<-names
-			ggplot2.network(edge.list, edge.color.var = "type", edge.color = NULL, directed = FALSE,
+			
+			#use a constant edge coloring scheme
+			color.pal<-rainbow(5)
+			.type<-c('KEGG','Tanimoto','positive correlation','negative correlation','mz')
+			col.opts<-data.frame(color = color.pal)
+			rownames(col.opts)<-.type
+			cur.types<-fixlc(levels(edge.list$type)) # current edge types
+			edge.color<-fixlc(col.opts[cur.types,,drop=FALSE][cur.types,])
+			#need to reorder color to the actual order of the edge types
+			
+			
+			#not sure why color order doesn't respect the order factor type?
+			ggplot2.network(edge.list, edge.color.var = "type", edge.color = edge.color, directed = FALSE,
 						node.color = NULL, show.names = input$network_plot_show_name, node.names=input$node_names,
 						bezier = input$network_plot_bezier, node.size = input$network_plot_node_size, 
 						node.label.size = input$network_plot_name_size, max.edge.thickness = input$network_plot_edge_size)				
 						
-		} else {""}
+		} 
 		})
 	},  height = plot_height,width =plot_width )	
 
+
+ 
+output$SVGnetwork<-renderPrint({
+	#crate empty html placeholder
+	emptyHTML<-function(){
+		htmlhead <- 
+			'<!DOCTYPE html>
+			<head>
+			  <meta charset = "utf-8">
+			
+			</head>
+
+			<body>
+			'
+		# sink(paste0(file,".html"))
+		cat(htmlhead)
+		#close our file
+		# sink(file=NULL)
+	}
+	
+	if (input$create_edgelist_network == 0) return(emptyHTML())#return(plot(x = 1, type = 'n', main="", axes = FALSE, xlab = "", ylab = ""))
+	if(!any(input$network_plot_type%in%"SVG")) return(emptyHTML())#return(plot(x = 1, type = 'n', main="", axes = FALSE, xlab = "", ylab = ""))
+		
+		#calculate edges and plot 		
+	isolate({
+		# calculate_edgelist()
+		# final_edge_list_calculate()
+		# if(!input$metabomapr == "Network") return()
+		if(is.null(values$edge.list_for.network)) { 
+			return(emptyHTML())
+		} else if(length(values$edge.list) == 0) { 
+			return(emptyHTML())
+		} 
+		
+		if(any(input$network_plot_type %in% "SVG")){
+		
+			edge.list<-values$edge.list_for.network
+			#trying to avoid strange errors with factors
+			names<-colnames(edge.list)[1:2]
+			edge.list[,1]<-fixln(edge.list[,1,drop=FALSE])
+			edge.list[,2]<-fixln(edge.list[,2,drop=FALSE])
+			colnames(edge.list)[1:2]<-names
+			
+			#use a constant edge coloring scheme
+			color.pal<-rainbow(5)
+			.type<-c('KEGG','Tanimoto','positive correlation','negative correlation','mz')
+			col.opts<-data.frame(color = color.pal)
+			rownames(col.opts)<-.type
+			cur.types<-fixlc(levels(edge.list$type)) # current edge types
+			edge.color<-fixlc(col.opts[cur.types,,drop=FALSE][cur.types,])
+			#need to reorder color to the actual order of the edge types
+			
+			
+			#create svg of network
+			ggplot2.network(edge.list, edge.color.var = "type", edge.color = edge.color, directed = FALSE,
+				node.color = NULL, show.names = input$network_plot_show_name, node.names=input$node_names,
+				bezier = FALSE, node.size = input$network_plot_node_size, #bezier = input$network_plot_bezier
+				node.label.size = input$network_plot_name_size, max.edge.thickness = input$network_plot_edge_size,file="SVGnetwork")	
+		} 	
+						
+	})	
+})
+
+
+# #trying to get dynamic html
+# getPage<-function() {
+      # return(includeHTML("SVGnetwork.html"))
+  # }
+  
+# output$inc<-renderUI({
+# #trigger
+# if (input$create_edgelist_network == 0) return(emptyHTML(file="SVGnetwork"))#return(plot(x = 1, type = 'n', main="", axes = FALSE, xlab = "", ylab = ""))
+	# if(!any(input$network_plot_type%in%"static")) return(emptyHTML(file="SVGnetwork"))#return(plot(x = 1, type = 'n', main="", axes = FALSE, xlab = "", ylab = ""))
+
+		# if(any(input$network_plot_type %in% "static")){
+	# getPage()
+	# }
+
+# })
 
 # PLOTTING FUNCTIONS
 #-----------------------------
