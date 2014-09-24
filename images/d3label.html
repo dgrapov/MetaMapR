@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<meta charset=\"utf-8\">
+<body>
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<style type="text/css">
+</style>
+</head>
+<body>
+
+<script type="text/javascript">
+
+    var w = 350;
+    var h = 350;
+    var linkDistance=75;
+
+    var colors = d3.scale.category10();
+
+    var dataset = {
+
+    nodes: [
+    {name: " "},
+    {name: "Biochemical reaction"},
+    {name: "Structural similarity"},
+    {name: "Mass spectral similarity"},
+    {name: "Positive correlation"},
+	{name: "Negative correlation"}],
+    edges: [
+    {source: 0, target: 1, type:"kegg"},
+    {source: 0, target: 2, type:"tanimoto"},
+    {source: 0, target: 3, type:"mass spectral"},
+    {source: 0, target: 4, type:"positive correlation"},
+	{source: 0, target: 5, type:"negative correlation"}]
+    };
+
+ 
+    var svg = d3.select("body").append("svg").attr({"width":w,"height":h});
+
+    var force = d3.layout.force()
+        .nodes(dataset.nodes)
+        .links(dataset.edges)
+        .size([w,h])
+        .linkDistance([linkDistance])
+        .charge([-120])
+        .theta(0.1)
+        .gravity(0.03)
+        .start();
+
+ 
+
+    var edges = svg.selectAll("line")
+      .data(dataset.edges)
+      .enter()
+      .append("line")
+      .attr("id",function(d,i) {return 'edge'+i})
+      .attr('marker-end','none')
+      .style("stroke-width","10px")
+      .style("stroke",function(d) { 
+  //set default edge color
+  var edcol = "#3182bd" 
+  
+  //set edge color by type
+  switch (d.type) {
+      case "kegg":
+          edcol = "#FF0000";
+          break;
+      case "tanimoto":
+          edcol = "#CCFF00";
+          break;
+	 case "mass spectral":
+		  edcol = "#CC00FF";  
+          break;	  
+      case "positive correlation":
+          edcol = "#00FF66";
+		   break;
+      case "negative correlation":
+          edcol = "0066FF";
+		   break;
+  }
+  return edcol;
+})
+      .style("pointer-events", "none");
+    
+    var nodes = svg.selectAll("circle")
+      .data(dataset.nodes)
+      .enter()
+      .append("circle")
+      .attr({"r":8})
+      .style("fill","#d3d3d3")
+      .style("opacity", 1)
+      .call(force.drag)
+
+
+    var nodelabels = svg.selectAll(".nodelabel") 
+       .data(dataset.nodes)
+       .enter()
+       .append("text")
+       .attr({"dx":15,
+              "dy":-2,
+              "class":"nodelabel",
+              "stroke":"black"})
+       .text(function(d){return d.name;});
+
+    var edgepaths = svg.selectAll(".edgepath")
+        .data(dataset.edges)
+        .enter()
+        .append('path')
+        .attr({'d': function(d) {return 'M '+d.source.x+' '+d.source.y+' L '+ d.target.x +' '+d.target.y},
+               'class':'edgepath',
+               'fill-opacity':0,
+               'stroke-opacity':0,
+               'fill':'blue',
+               'stroke':'red',
+               'id':function(d,i) {return 'edgepath'+i}})
+        .style("pointer-events", "none");
+
+    var edgelabels = svg.selectAll(".edgelabel")
+        .data(dataset.edges)
+        .enter()
+        .append('text')
+        .style("pointer-events", "none")
+        .attr({'class':'edgelabel',
+               'id':function(d){return d.type},
+               'dx':65,
+               'dy':15,
+               'font-size':0,
+               'fill':'#FFFFFF'});
+
+    edgelabels.append('textPath')
+        .attr('xlink:href',function(d,i) {return '#edgepath'+i})
+        .style("pointer-events", "none")
+        .text(function(d){return d.type});
+
+
+    svg.append('defs').append('marker')
+        .attr({'id':'arrowhead',
+               'viewBox':'-0 -5 10 10',
+               'refX':25,
+               'refY':0,
+               //'markerUnits':'strokeWidth',
+               'orient':'auto',
+               'markerWidth':10,
+               'markerHeight':10,
+               'xoverflow':'visible'})
+        .append('svg:path')
+            .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
+            .attr('fill', '#ccc')
+            .attr('stroke','#ccc');
+     
+
+    force.on("tick", function(){
+
+        edges.attr({"x1": function(d){return d.source.x;},
+                    "y1": function(d){return d.source.y;},
+                    "x2": function(d){return d.target.x;},
+                    "y2": function(d){return d.target.y;}
+        });
+
+        nodes.attr({"cx":function(d){return d.x;},
+                    "cy":function(d){return d.y;}
+        });
+
+        nodelabels.attr("x", function(d) { return d.x; }) 
+                  .attr("y", function(d) { return d.y; });
+
+        edgepaths.attr('d', function(d) { var path='M '+d.source.x+' '+d.source.y+' L '+ d.target.x +' '+d.target.y;
+                                           //console.log(d)
+                                           return path});       
+
+        edgelabels.attr('transform',function(d,i){
+                return 'rotate(0)';
+                
+        });
+    });
+
+</script>
+</body>
