@@ -2,6 +2,8 @@
 # for debugging
 options(width = 150, shiny.trace=TRUE)
 
+
+
 #load devium functions
 #source local directory to load devium fxns 
 source.local.dir<-function(wd){
@@ -19,12 +21,11 @@ source.local.dir(paste0(getwd(),"/R")) # app
 #global storage objects
 values <- reactiveValues()
 
-
-
-# options(repos = c("http://cran.rstudio.com/"))
+#load packages
+options(repos = c('http://cran.us.r-project.org',"http://cran.rstudio.com/"))
 #options(repos ="http://www.stats.ox.ac.uk/pub/RWin")
-libs <- c("tools","igraph","graph","reshape2","network","sna","Hmisc",
-"ggplot2","jsonlite","RCurl","plyr","d3Network","grid","gridSVG","XML")
+libs <- c("igraph","graph","reshape2","network","sna","Hmisc",
+"ggplot2","jsonlite","RCurl","plyr","d3Network","grid","gridSVG","XML","tools","whisker","rjson")
 #load all packages
 check.get.packages(libs)
 
@@ -39,36 +40,13 @@ check.get.packages(libs)
 
 #for some people loading CTSgetR causes errors
 # bundle all the code with MetaMapR until CTSgetR is on Cran
-source("CTS.R")
+# source("CTS.R") # in R folder now
 #options for translations
 # CTS.options<-CTS.options()
 # save(CTS.options,file="CTS.options")
 values$CTS.options<-CTS.options()
 
 
-# #source directly git repo (should also bundle with the app)...
-# sourceGitDirectory<-function(url="https://github.com/dgrapov/devium/tree/master/Shiny/Devium/tools/analysis", user="dgrapov"){
-			# obj<-RCurl::getURL(url, ssl.verifypeer=FALSE)
-			# #can't use XML::xmlParse(contents) or xmlToList(contents)... so hack
-			# tmp<-strsplit(obj,'href=\"/')
-			# tmp2<-unlist(strsplit(as.character(unlist(tmp)),'class'))
-			# #look for .R scripts
-			# s1<-agrep("dgrapov",tmp2)
-			# s2<-agrep(".R/",tmp2)
-			# keep<-s1[s1%in%s2][-1] # the first entry is always wrong?
-			# tmp3<-tmp2[keep]
-
-			# scripts<-paste0("https://raw.githubusercontent.com/",gsub('\" ',"",tmp3)) # fix formatting
-			# scripts<-gsub("blob/","",scripts)
-			# sapply(1:length(scripts),function(i)
-				# {
-					# tryCatch( eval( expr = parse( text = RCurl::getURL(scripts[i],
-								   # ssl.verifypeer=FALSE) ),envir=.GlobalEnv),error=function(e){print(paste("can't load:",scripts[i]))})
-				# })
-
-		# }
-
-# tryCatch(sourceGitDirectory(url="https://github.com/dgrapov/devium/tree/master/R", user="dgrapov"), error=function(e){message("Can't access")}) 
 
 #set demo data
 #----------------------
@@ -82,7 +60,7 @@ values[["Citric Acid Cycle"]] <-data.frame(metabolite=TCA.names,KEGG = TCA.kegg,
 datasets<-"Citric Acid Cycle"
 
 #metabolomics example small data set
-values[["metabolomics data"]]<-read.csv("example data.csv",row.names=1)
+values[["metabolomics data"]]<-read.csv("data/example data.csv",row.names=1)
 datasets<-c("Citric Acid Cycle", "metabolomics data")
 values$datasets<-datasets # used to dynamically add data sets
 
@@ -125,4 +103,5 @@ emptyHTML<-function(file){
 		#close our file
 		sink(file=NULL)
 	}
+
 emptyHTML(file="SVGnetwork")

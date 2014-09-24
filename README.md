@@ -24,11 +24,13 @@ NOTE: modify file paths for OSX and LINUX
 * [Examples](http://dgrapov.github.io/MetaMapR/)
 
 ### Information
-Version: MetaMapR (v1.2.1) released 02/24/14
-
+Version: MetaMapR (v1.3) released 09/23/14
+News: See the newest features.
 License: GNU General Public License (v3), [read more](https://github.com/dgrapov/MetaMapR/blob/master/LICENSE)
 
 ### TODO
-* fix double translations bug
-* add hashing for various edgelist to speed filtering
+* add partial correlations
+* add cytoscape.js networks
+* enable network mapping
+
 

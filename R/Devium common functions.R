@@ -572,7 +572,7 @@ check.get.packages<-function(pkg)
 					source("http://bioconductor.org/biocLite.R")
 					lib.fun.bioc<-function(need){
 							sapply(1:length(need), function(i){
-							tryCatch( biocLite(need[i]), 
+							tryCatch( biocLite(need[i],ask=FAlSE), 
 								error=function(e){need[i]})
 							})
 						}
@@ -654,40 +654,40 @@ gget<-function(obj)
 }
 		
 #function to connect to google docs
-GetGoogleDoc<-function(account,password,connection="new")
-	{
-		#returns list 
-		# [1] = connection name
-		# [2] = names of documents
-		#  connection = as.character connection name if already made using this function 
-		# and stored in the envir= googDocs
-		
-		#install RGoogleDocs if not available
-		if(require("RGoogleDocs")==FALSE)
-			{
-				install.packages("RGoogleDocs", repos = "http://www.omegahat.org/R", type="source")
-				library("RGoogleDocs")
-			}
-			
-		if(connection == "new")
-			{
-					#make time stampped name for connection
-					con.name<-con.name.txt<-paste('connection',format(Sys.time(), "%Y.%m.%d_%I_%M_%p"), sep = ".")
-				
-					#set options to avoid ssl error 
-					options(RCurlOptions = list(capath = system.file("CurlSSL", "cacert.pem", package = "RCurl"), ssl.verifypeer = FALSE))
-					
-					#assign to new envir
-					assign("googDocs",new.env(),envir=.GlobalEnv)
-					assign(con.name,getGoogleDocsConnection(getGoogleAuth(account, password, service ="wise")), envir = googDocs )	
-			} else {
-					con.name<-con.name.txt<-connection
-					}		
-					
-		docs<-getDocs(tryCatch(get(con.name,envir=googDocs),error=function(e){stop(paste(connection, " does not exist","\n"))}))
-		dnames<-names(docs)
-		return(list(connection = con.name.txt , names = dnames))
-	}
+# GetGoogleDoc<-function(account,password,connection="new")
+# 	{
+# 		#returns list 
+# 		# [1] = connection name
+# 		# [2] = names of documents
+# 		#  connection = as.character connection name if already made using this function 
+# 		# and stored in the envir= googDocs
+# 		
+# 		#install RGoogleDocs if not available
+# 		if(require("RGoogleDocs")==FALSE)
+# 			{
+# 				install.packages("RGoogleDocs", repos = "http://www.omegahat.org/R", type="source")
+# 				library("RGoogleDocs")
+# 			}
+# 			
+# 		if(connection == "new")
+# 			{
+# 					#make time stampped name for connection
+# 					con.name<-con.name.txt<-paste('connection',format(Sys.time(), "%Y.%m.%d_%I_%M_%p"), sep = ".")
+# 				
+# 					#set options to avoid ssl error 
+# 					options(RCurlOptions = list(capath = system.file("CurlSSL", "cacert.pem", package = "RCurl"), ssl.verifypeer = FALSE))
+# 					
+# 					#assign to new envir
+# 					assign("googDocs",new.env(),envir=.GlobalEnv)
+# 					assign(con.name,getGoogleDocsConnection(getGoogleAuth(account, password, service ="wise")), envir = googDocs )	
+# 			} else {
+# 					con.name<-con.name.txt<-connection
+# 					}		
+# 					
+# 		docs<-getDocs(tryCatch(get(con.name,envir=googDocs),error=function(e){stop(paste(connection, " does not exist","\n"))}))
+# 		dnames<-names(docs)
+# 		return(list(connection = con.name.txt , names = dnames))
+# 	}
 
 #function to view excel objects	
 viewExcelObject<-function(obj.path)

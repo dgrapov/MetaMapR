@@ -1,0 +1,95 @@
+#tool
+    {
+		/* padding-top: 10px; */
+		/* padding-bottom: 20px; */
+		/* font-size:20px; */
+		background-color:#E0E0E0;
+		color: #36648B;
+		font-size:110%;
+    }
+
+label.radio { 
+  padding-left: 18px;
+  padding-right: 0px;
+  margin-left: 3px;
+  display: inline-block; 
+}
+
+.radio input[type="radio"] {
+  float: none; 
+}
+
+label.checkbox  { 
+  display: inline-block; 
+}
+
+.checkbox input[type="checkbox"] { 
+  float: none; 
+}
+
+select { 
+  max-width: 200px;
+}
+
+/* cant figure out how to change height of all selectedInput multiple =TRUE */
+/* select.multiple { 
+  max-width: 200px;
+  height: 200px;
+}
+ */
+textarea { 
+  width: 650px; 
+}
+
+input[type="number"] {
+  max-width: 185px; 
+}
+
+.jslider { 
+  max-width: 200px; 
+}
+
+.well { 
+  padding: 12px; 
+  margin-bottom: 5px; 
+  max-width: 280px; 
+}
+
+.span4 { 
+  max-width: 280px; 
+}
+
+.popover { 
+  width: 600px; 
+  position: relative; top: -75px !important; 
+  left: 320px !important; 
+}
+
+.modal { 
+  /*width: 1000px; */
+  width: 800px; 
+  left: 600px; 
+}
+
+.modal-body {
+  height: 100%;
+  max-height:500px;
+}
+
+div.busy {
+  position:absolute;
+  top: 40%;
+  left: 50%;
+  margin-top: -100px;
+  margin-left: -50px;
+  display:none;
+  background: rgba(255, 255, 255, 1);  /* transparent; */
+  text-align: center;
+  padding-top: 20px;
+  padding-left: 30px;
+  padding-bottom: 40px;
+  padding-right: 30px;
+  border-radius: 5px;
+}
+
+

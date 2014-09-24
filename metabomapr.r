@@ -1,4 +1,11 @@
 
+#custom mods to shiny UI to get
+mainPanel2<-function (..., width1 = 4, width2=10) 
+{
+    div(class = paste0("span", width2," ","push",width1), ...)
+}
+
+
 #ggplot based network drawing fxn
 ggplot2.network<-function(edge.list, edge.color.var = NULL, edge.color = NULL, directed = FALSE,
 						node.color = NULL, show.names = TRUE, node.names=NULL,
@@ -583,7 +590,10 @@ calculate_tanimoto_edgelist<-reactive({
 	
 		# get tanimoto similarity
 		CID.id<-index
-		tani.edges<-tryCatch(CID.to.tanimoto(cids=fixlc(CID.id), cut.off = 0, parallel=FALSE),error=function(e){NULL}) # cut.off = input$tanimoto_cutoff
+		#load local DB for SDF files from cid
+		DB<-tryCatch(get(load("data/CID.SDF.DB")[1]),error=function(e) {NULL})
+		tani.edges<-tryCatch(CID.to.tanimoto(cids=fixlc(CID.id),DB=DB,save.as="data/CID.SDF.DB"),error=function(e){NULL}) # cut.off = input$tanimoto_cutoff
+		values$FUCK12<-list(names(DB),tani.edges)
 		
 		#create shared index between different edge ids
 		index<-CID.id
@@ -630,7 +640,7 @@ calculate_mz_edgelist<-reactive({
 		if(!is.null(spec.edges)){
 			# edge.names<-data.frame(index, network.id = c(1:length(index))) # done internally to the function which should be ok as long ass all objects are submitted 
 			# spec.edges[,1:2]<-make.edge.list.index(edge.names,spec.edges)
-			spec.edges<-data.frame(as.matrix(spec.edges[,1:2]),weight = spec.edges[,3,],type = "m/z" )
+			spec.edges<-data.frame(as.matrix(spec.edges[,1:2]),weight = spec.edges[,3,],type = "mass spectral" )
 			values$edgelist.error.message$mz<-NULL
 		}	else {
 			values$edgelist.error.message$mz<-"Error calculating mass spectral similarities.\n"
@@ -696,71 +706,6 @@ calculate_cor_edgelist<-reactive({
 	
 })
 
-
-	
-	# #edges based on correlation
-	# if(input$cor_edges){
-		# data<-getdata()[,input$network_index_cor]
-		# tmp.data<-t(data)
-		# colnames(tmp.data)<-1:nrow(data)
-		# cor.edges<-devium.calculate.correlations(tmp.data,type=input$network_index_type_cor, results = "edge list")            
-		
-		
-		# # values$tmp.node.info$cor.edge.index<-index see lower
-		
-		# # #fdr adjust trade p-value for q-value
-		# # if(input$cor_edges_fdr) { 
-				# # # q.val<-FDR.adjust(obj = fixln(tmp[,4]),type="pvalue")
-				# # adj.p<-p.adjust(fixln(tmp[,4]), method="BH")
-				# # adj.p[is.na(as.numeric(adj.p))]<- 0 # error vars, assume due cor =1
-				# # tmp[,4]<-adj.p
-			# # }
-		 
-		# # #filter change this to happen externally
-		# # cor.edges<-tmp[fixln(tmp[,4]) <= input$cor_cutoff,]
-		
-		# if(nrow(cor.edges)>0){
-			# type<-rep(paste("positive",input$network_index_type_cor),nrow(cor.edges))
-			# type[fixln(cor.edges[,3])<=0]<-paste("negative",input$network_index_type_cor)
-			# cor.edges<-data.frame(as.matrix(cor.edges[,1:2]),type = type, weight = abs(fixln(cor.edges[,3])),p.values=fixln(cor.edges[,4]))
-			
-			# #store temporary results	
-			# values$tmp.node.info$cor.edge.index<-1:nrow(data)
-			# values$tmp.edge.list$cor.edges<-cor.edges
-		# } 
-	# }
-	
-	# # # remove self edges and duplicate edges
-	# # # respect edge type hierarchy
-	# # # type coming in previous row over writes those coming later for duplicated connections
-	# # if(input$unique_edges) {
-		# # type<-factor(res$type,labels=unique(res$type),levels=unique(res$type),ordered=TRUE)
-		# # res$type<-type
-		# # res<-clean.edgeList(data=res)
-	# # }
-	
-	# # values$edge.list_for.network<-res # need to fix but translations mess network plotter up (should be node names any way so fix by using two objects)
-	
-	# # #optionally translate edge ids to a supplied index
-	# if(!input$translate_edge_index=="none"){
-		# tmp.id<-getdata()[,input$translate_edge_index]
-		# # trans.s<-translate.index(fixlc(res[,1]), lookup=cbind(1:nrow(getdata()),fixlc(tmp.id)))
-		# # trans.t<-translate.index(fixlc(res[,2]), lookup=cbind(1:nrow(getdata()),fixlc(tmp.id)))
-		# # res$source<-as.numeric(trans.s)
-		# # res$target<-as.numeric(trans.t)
-		# # node.attr$network.index<-tmp.id
-		# values$tmp.node.info$network.index<-tmp.id
-	# } 
-	# # #save for other functions access
-	
-	# # values$edge.list<-res	
-	# # if(all(dim(res)==0)){res<-data.frame("Error"="Please set network options")}
-	# # values$node.attributes<-node.attr
-	# # return(values$edge.list)
-# })
-
-#function to apply filters to stored edge 
-#list object created by calculate_X_edgelist
 #------------------------------------------
 final_edge_list_calculate<-reactive({
 	
@@ -786,8 +731,6 @@ final_edge_list_calculate<-reactive({
 		if(input$cor_edges_fdr) filter<-tmp$cor.edges$fdr.p.values else filter<-tmp$cor.edges$p.values
 		tmp$cor.edges<-tmp$cor.edges[filter <= input$cor_cutoff,c("source","target","type","weight")]
 		cor.levels<-fixlc(unique(tmp$cor.edges$type))
-		values$FUCKCKC<-NULL
-		values$FUCKCKC<-cor.levels
 	}
 	
 	res<-data.frame(do.call("rbind",tmp))
@@ -799,7 +742,7 @@ final_edge_list_calculate<-reactive({
 		if(!is.null(tmp$kegg)) ord<-c(ord,"KEGG")
 		if(!is.null(tmp$tanimoto)) ord<-c(ord,"Tanimoto")
 		if(!is.null(tmp$cor.edges)) ord<-c(ord,cor.levels) 
-		if(!is.null(tmp$mz)) ord<-c(ord,"m/z")
+		if(!is.null(tmp$mz)) ord<-c(ord,"mass spectral")
 		
 		type<-factor(res$type,levels=ord,ordered=TRUE)
 		res$type<-type
@@ -839,31 +782,52 @@ get.d3.Network<- reactive ({
 			# #need to translate index to include 0 and go in a decreasing order
 			edge.list[,1]<-fixln(edge.list[,1])-1
 			edge.list[,2]<-fixln(edge.list[,2])-1
+			edge.list[,"weight"]<-tryCatch(rescale(fixln(edge.list[,"weight"]),c(10,input$network_plot_edge_size*10)),error=function(e){rep(input$network_plot_edge_size*10,length(edge.list[,"weight"]))})
 			# edge.list<-edge.list[order(edge.list[,1],edge.list[,2]),]
 			# #node info
 			node.info<-data.frame(name=get_node_names())
 			
+			#add node legend
+			#safe ids to use for nodes
+			.types<-unique(fixlc(edge.list[,"type"]))
+			ntypes<-length(.types)
+			l.source<-max(unlist(edge.list[,1:2]))+1
+			legend<-data.frame(source=rep(l.source,ntypes),target=c((l.source+1):(l.source+ntypes)),type=.types,weight=rep(max(edge.list[,"weight"]),ntypes))
+			# #need to insert legend entry into l.source position of node info
+			# tmp1<-as.matrix(node.info)[1:(l.source-1),,drop=FALSE]
+			# tmp2<-as.matrix(node.info)[(l.source+1):nrow(node.info),,drop=FALSE]
 			
-			#translate source target ids to node names for simple d3network
-			tmp<-fixln(edge.list[,1:2])
-			lookup<-data.frame(names=get_node_names())
-			rownames(lookup)<-fixlc(0:(nrow(lookup)-1))
+			#update degle list and node info to include legend
+			# node.info2<-data.frame(rbind(as.matrix(node.info),as.matrix(data.frame(name=c("LEGEND",.types)))))#data.frame(rbind(tmp1,as.matrix(data.frame(name="LEGEND")),tmp2,as.matrix(data.frame(name=.types))))
+			# edge.list2<-data.frame(rbind(as.matrix(edge.list),as.matrix(legend)))
+			# rownames(edge.list2)<-1:nrow(edge.list2)
 			
-			simple.edge.list<-edge.list
+			#need to convert to a format d3 will accept
+			# clean<-clean.edgeList(data=edge.list2,source="source",target="target",type=NULL)
+			# trans.t<-translate.index(fixlc(res[,2]), lookup=cbind(1:nrow(getdata()),fixlc(tmp.id)))
+			# values$new.items<-NULL
+			# values$new.items<-list(clean,node.info2,edge.list2)
+			
+			# #translate source target ids to node names for simple d3network
+			# tmp<-fixln(edge.list[,1:2])
+			# lookup<-data.frame(names=get_node_names())
+			# rownames(lookup)<-fixlc(0:(nrow(lookup)-1))
+			
+			# simple.edge.list<-edge.list
 
-			# values$Fuck.edges<-edge.list
-			source<-lookup[fixlc(edge.list[,1]),]
-			target<-lookup[fixlc(edge.list[,2]),]
-			simple.edge.list<-data.frame(source,target)	
-			# values$simple.edge.list<-simple.edge.list
-			# simple.edge.list<-simple.edge.list[order(simple.edge.list$source),]
-			# values$simple.edge.list<-simple.edge.list
+			# # values$Fuck.edges<-edge.list
+			# source<-lookup[fixlc(edge.list[,1]),]
+			# target<-lookup[fixlc(edge.list[,2]),]
+			# simple.edge.list<-data.frame(source,target)	
+			# # values$simple.edge.list<-simple.edge.list
+			# # simple.edge.list<-simple.edge.list[order(simple.edge.list$source),]
+			# # values$simple.edge.list<-simple.edge.list
 			
-			#names are ordered according to the source column
-			#could show groups based on clustering or not
+			# #names are ordered according to the source column
+			# #could show groups based on clustering or not
 			node.info$group<-1#sample(1:10,nrow(node.info),replace = TRUE)
 
-			return(list(edge.list=edge.list,node.info=node.info,simple.edge.list=simple.edge.list))
+			return(list(edge.list=edge.list,node.info=node.info))
 })
 
 # #reset inputs if no options are selected
@@ -971,7 +935,6 @@ cor_edge_watcher<-reactive({
 	if(identical(cur.state,values$cor_edge_state)) return(FALSE) else return(TRUE)
 })
 
-
 #function to rencode index
 #relic needs to be replaced elsewhere
 make.edge.list.index<-function(edge.names, edge.list){
@@ -999,7 +962,8 @@ output$network_data_upload<-renderUI({
 			HTML("<label>Load data: (.csv)</label>"),
 			uiOutput("upload_local_server"),
 			HTML("<label>Paste data:</label>"),
-			tags$textarea(id="copyAndPaste", rows=3, cols=40, "")
+			tags$textarea(id="copyAndPaste", rows=3, cols=10, ""),
+			tags$style(type="text/css", "#copyAndPaste     { width:200px;}")
 		)		
 	)	
 		
@@ -1048,7 +1012,7 @@ output$network_index_info_bio<-renderUI({
 	 # div(class='span', checkboxInput(inputId = "bio_edges", label = "",value=FALSE)),
 	 # div(class='span', h4('Biochemical')))),
 	 checkboxInput(inputId = "bio_edges", label = "",value=FALSE),
-	 h4('Biochemical'),
+	 h4('Biochemical Reactions'),
 	 # tags$style(type='text/css', "#bio_edges { font-weight: bold; font-size:16px;}"),
 		conditionalPanel(condition = "input.bio_edges",
 		selectInput(inputId = "network_index_type_bio", label = "Database:", choices = list("KEGG" = "kegg" ), selected = "KEGG", multiple = FALSE),
@@ -1064,7 +1028,7 @@ output$network_index_info_bio<-renderUI({
 output$network_index_info_chem<-renderUI({
 	wellPanel(
 	checkboxInput(inputId = "chem_edges", label = "",value=FALSE),
-	h4('Chemical Similarity'),
+	h4('Structural Similarity'),
 		conditionalPanel(condition = "input.chem_edges",
 		selectInput(inputId = "network_index_type_chem", label = "Database:", choices = list("PubChem CID" = "pubchemCID" ), selected = "PubChem CID", multiple = FALSE),
 		selectInput(inputId = "network_index_chem", label = "Metabolite index:", choices = varnames(), selected = varnames()[1], multiple = FALSE),
@@ -1117,7 +1081,7 @@ output$translate_edge_index<-renderUI({
 plot_height<-function(){
 	height <- try(input$plot_output_height)
 	if(is(height, 'try-error') || is.null(height)) {
-		height<-850
+		height<-400
 	} 
 	return(height)
 }
@@ -1125,7 +1089,7 @@ plot_height<-function(){
 plot_width<-function(){
 	width <- try(input$plot_output_width)
 	if(is(width, 'try-error') || is.null(width)) {
-		width<-850
+		width<-400
 	} 
 	return(width)
 }
@@ -1133,6 +1097,7 @@ plot_width<-function(){
 
 #Generate ggplot2 network
 #-----------------------------
+#as PNG
 output$network <- renderPlot({
 	
 	if (input$create_edgelist_network == 0) return()#return(plot(x = 1, type = 'n', main="", axes = FALSE, xlab = "", ylab = ""))
@@ -1160,7 +1125,7 @@ output$network <- renderPlot({
 			
 			#use a constant edge coloring scheme
 			color.pal<-rainbow(5)
-			.type<-c('KEGG','Tanimoto','positive correlation','negative correlation','mz')
+			.type<-c('KEGG','Tanimoto','positive correlation','negative correlation','mass spectral')
 			col.opts<-data.frame(color = color.pal)
 			rownames(col.opts)<-.type
 			cur.types<-fixlc(levels(edge.list$type)) # current edge types
@@ -1178,10 +1143,9 @@ output$network <- renderPlot({
 		})
 	},  height = plot_height,width =plot_width )	
 
-
- 
+#ggplot as SVG
 output$SVGnetwork<-renderPrint({
-	#crate empty html placeholder
+	#create empty html placeholder
 	emptyHTML<-function(){
 		htmlhead <- 
 			'<!DOCTYPE html>
@@ -1223,7 +1187,7 @@ output$SVGnetwork<-renderPrint({
 			
 			#use a constant edge coloring scheme
 			color.pal<-rainbow(5)
-			.type<-c('KEGG','Tanimoto','positive correlation','negative correlation','mz')
+			.type<-c('KEGG','Tanimoto','mz','positive correlation','negative correlation')
 			col.opts<-data.frame(color = color.pal)
 			rownames(col.opts)<-.type
 			cur.types<-fixlc(levels(edge.list$type)) # current edge types
@@ -1274,25 +1238,53 @@ output$networkPlot<-renderPrint({
 		} 
 		if(any(input$network_plot_type %in% "interactive")) {
 			# h4("D3 network goes here!")
-			if(input$network_plot_show_name){
+			# if(input$network_plot_show_name){
 			
-				#need to translate numeric edge.list to node names
+				# #need to translate numeric edge.list to node names
 				
 			
-				d3SimpleNetwork(get.d3.Network()$simple.edge.list,	height=plot_height(),width=plot_width(),
-					   opacity = 0.9,standAlone = FALSE,fontsize = 12,
-								parentElement = '#networkPlot')	
-			} else {	
-
-				d3ForceNetwork(Links = get.d3.Network()$edge.list, Nodes=get.d3.Network()$node.info,
-				   Source = "source", Target = "target", Value = "weight",
+				# d3SimpleNetwork(get.d3.Network()$simple.edge.list,	height=plot_height(),width=plot_width(),
+					   # opacity = 0.9,standAlone = FALSE,fontsize = 12,
+								# parentElement = '#networkPlot')	
+			# } else {	
+				# ##test to print file
+				# d3ForceNetwork2(Links = get.d3.Network()$edge.list, Nodes=get.d3.Network()$node.info, Source = "source", Target = "target", Value = "weight",Type="type",
+				   # NodeID = "name", Group = "group",file="test.html",
+				   # height=plot_height(),width=plot_width(),
+				   # opacity = input$network_plot_edge_alpha,nodeColour = "#d3d3d3", 
+				   # nodeClickColour = "#000000", textColour = "#000000",
+				   # nodeopacity=input$network_plot_node_alpha,legend="d3label.html")   
+				 
+				d3ForceNetwork2(Links = get.d3.Network()$edge.list, Nodes=get.d3.Network()$node.info,
+				   Source = "source", Target = "target", Value = "weight",Type="type",
+				   fontsize = input$network_plot_name_size*2, linkDistance = input$network_plot_edge_length,
 				   NodeID = "name", Group = "group",height=plot_height(),width=plot_width(),
-				   opacity = 0.9,zoom=TRUE,standAlone = FALSE,
-							parentElement = '#networkPlot')		
-			}
+				   opacity = input$network_plot_edge_alpha,standAlone = FALSE, nodeColour = "#d3d3d3", 
+				   nodeClickColour = "#000000", textColour = "#000000",nodeopacity=input$network_plot_node_alpha,
+				   parentElement = '#networkPlot',legend="d3label.html") # legend is actually in www folder
+	
 		}	else { return(h5(""))}
 	})
 })	
+
+# output$networkPlot_legend<-renderUI({
+	# if (input$create_edgelist_network == 0) return()
+	# if(length(values$edge.list) == 0) return()
+	# if(any(input$network_plot_type %in% "interactive")) {
+		# includeHTML('www/d3label.html')
+	# } else {return()}	
+# })	
+
+
+# output$networkPlot_legend<-renderPrint({ # can not get legend positioned or shown
+	# if (input$create_edgelist_network == 0) return(h5(""))
+	# if(length(values$edge.list) == 0) return(h5(""))
+	# if(any(input$network_plot_type %in% "interactive")) {
+		# # return(cat(readLines('www/d3label.html')))
+		# h5("LEGEND hoes here")
+		
+	# } else {return(h5(""))}	
+# })	
 	
 	
 #network attributes table

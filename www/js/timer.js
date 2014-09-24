@@ -1,4 +1,3 @@
-
 <script type="text/javascript">
 var wasBusy = false;
 var elapsedTimer = null;
