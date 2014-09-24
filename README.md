@@ -20,12 +20,15 @@ shiny::runApp('~/../Desktop/MetaMapR-master/MetaMapR-master')
 NOTE: modify file paths for OSX and LINUX 
 
 ### Instructions
+<iframe src="https://github.com/dgrapov/MetaMapR/blob/master/Manual/test.html" frameborder="0"></iframe>
 * [Tutorial](http://ufpr.dl.sourceforge.net/project/metamapr/Metmapr%20v1.2.1%20tutorial%20v1.doc.pdf) (a more detailed version coming soon)
 * [Examples](http://dgrapov.github.io/MetaMapR/)
 
 ### Information
 Version: MetaMapR (v1.3) released 09/23/14
-News: See the newest features.
+
+News: [See the newest features.](https://github.com/dgrapov/MetaMapR/blob/master/NEWS.md)
+
 License: GNU General Public License (v3), [read more](https://github.com/dgrapov/MetaMapR/blob/master/LICENSE)
 
 ### TODO
