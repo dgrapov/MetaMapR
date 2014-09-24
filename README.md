@@ -1,4 +1,4 @@
-[MetaMapR](http://spark.rstudio.com/dgrapov/MetaMapR/) 
+[MetaMapR](http://dgrapov.github.io/MetaMapR/) 
 ========
 
 ## A metabolomic network mapping tool 
