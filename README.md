@@ -2,16 +2,16 @@
 ========
 
 ## A metabolomic network mapping tool 
-![demo](Manual/metamapr long.gif.gif)
+![demo](Manual/metamapr_long.gif)
 
 ### Installation
 Requires [R](http://cran.us.r-project.org/) and [Shiny](https://github.com/rstudio/shiny-server). 
 Try it out using the [Shiny glimmer server](http://spark.rstudio.com/dgrapov/MetaMapR/) 
 or run locally by pasting the following code into the R console:
- ```r
+```r
 library(shiny)
 shiny::runGitHub('MetaMapR','dgrapov')
- ```
+```
 Alternatively download the .zip file, unzip and run the following code (example for file on desktop)
 ```r
 library(shiny)
