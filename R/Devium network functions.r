@@ -512,7 +512,7 @@ make.ave.qpgraph<-function(data,tests=200,for.col=TRUE,...){
 			return(average.net)
 		}
 		if(dim(data)[2]<=dim(data)[1]&for.col==TRUE)long.dim.are.variables<-FALSE else long.dim.are.variables<-TRUE
-		.local(data,long.dim.are.variables=long.dim.are.variables,tests=tests)
+		.local(data,long.dim.are.variables=long.dim.are.variables,tests=tests,...)
 	}
 	
 #plot graph edge/vertex number vs threshhold
@@ -1048,7 +1048,7 @@ CID.to.KEGG.pairs<-function(cid,database=get.KEGG.pairs(),lookup=get.CID.KEGG.pa
 	}
 
 #calculate correlations and p-values
-devium.calculate.correlations<-function(data,type="pearson", results = "matrix"){
+devium.calculate.correlations<-function(data,type="spearman", results = "edge list"){
 		check.get.packages(c("impute","WGCNA","Hmisc"))
 		#data will be coerced to a matrix
 		# type includes pearson (WGCA), biweight(WGCA), spearman
@@ -1080,6 +1080,21 @@ devium.calculate.correlations<-function(data,type="pearson", results = "matrix")
 		return(res)			
 	}
 
+#test only specific correlations between x and y matrices
+# and calculate FDR for only x to y comparisons
+xy.correlations<-function(x,y,method="spearman",fdr.method="BH",...){
+	#where x and y are data frames
+	res<-do.call("rbind",lapply(1:ncol(x),function(i){
+		tmp<-do.call("rbind",lapply(1:ncol(y),function(j){
+			res<-cor.test(x[,i],y[,j],method=method,...)
+			data.frame(source=colnames(x)[i],target=colnames(y)[j],cor=res$estimate,p.value=res$p.value)
+		}))
+	}))
+	res$fdr.p.value<-p.adjust(res$p.value,method=fdr.method)
+	return(res)
+}	
+	
+	
 # #(using ChemmineR API)get tanimoto distances from cids 
 # CID.to.tanimoto<-function(cids, cut.off = .7, parallel=FALSE, return="edge list"){
 	# #used cids = PUBCHEM CIDS to calculate tanimoto distances
@@ -2029,30 +2044,35 @@ clean.edgeList<-function(data,source="source",target="target",type=NULL){
 }
 
 
+
+
 test<-function(){
 
-#get tanimoto similarity for cids
-cids<-c("1004", "100714", "1015", "1023", "10253", "10413", "10442", "10465", "10467", "105001")
 
+kegg.id<-c("C00186","C00022")
+#KEGG rxn DB
+DB<-get.KEGG.pairs(type="main")
+#create KEGG and CID based biochemical/chemical similarity network
+kegg.list<-get.Reaction.pairs(kegg.id,DB,index.translation.DB=NULL,parallel=FALSE,translate=FALSE)
 
-#get SDF file
-load("CID.SDF.DB")
-DB<-CID.SDF.DB
-(cmpd.DB<-get.SDF.from.CID(cids,DB=DB,query.limit=25,update.DB=TRUE,save.as="CID.SDF.DB",progress=TRUE))
-
-#convert SDF file to tanimoto similarity
-get.tanimoto.from.SDF(cmpd.DB,type="list",cut.off=0)
-
-CID.to.tanimoto<-function(cids,...){
-	#wrapper for get sdf from cid 
-	#convert sdf to tanimoto similarity
-	cmpd.DB<-get.SDF.from.CID(cids,...)
-	get.tanimoto.from.SDF(cmpd.DB,...)
-}
+#get tanimoto similarity
 cids<-c("70","51","204")
-DB<-tryCatch(get(load("data/CID.SDF.DB")[1]),error=function(e) {NULL})
-CID.to.tanimoto(cids,DB=DB,save.as="data/CID.SDF.DB")
+DB2<-tryCatch(get(load("data/CID.SDF.DB")[1]),error=function(e) {NULL})
+cid.list<-CID.to.tanimoto(cids,DB=DB2,update.DB=FALSE)
 
+#merge the two edge list maintaining some hierarchy of edges
+obj<-c(kegg.id,cids)
+id<-data.frame(obj,1:length(obj))
+tmp<-list()
+tmp$source<-translate.index(fixlc(cid.list[,1]), lookup=id)
+
+clean.list<-clean.edgeList(data=res)
+
+
+#translate to a common edge list
+ID<-1:nrow(1)
+trans.s<-translate.index(fixlc(res[,1]), lookup=cbind(,fixlc(tmp.id)))
+trans.t<-translate.index(fixlc(res[,2]), lookup=cbind(1:nrow(getdata()),fixlc(tmp.id)))
 
 
 }

@@ -593,7 +593,7 @@ calculate_tanimoto_edgelist<-reactive({
 		#load local DB for SDF files from cid
 		DB<-tryCatch(get(load("data/CID.SDF.DB")[1]),error=function(e) {NULL})
 		tani.edges<-tryCatch(CID.to.tanimoto(cids=fixlc(CID.id),DB=DB,save.as="data/CID.SDF.DB"),error=function(e){NULL}) # cut.off = input$tanimoto_cutoff
-		values$FUCK12<-list(names(DB),tani.edges)
+		
 		
 		#create shared index between different edge ids
 		index<-CID.id
