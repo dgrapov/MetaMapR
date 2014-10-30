@@ -1,4 +1,4 @@
-[MetaMapR](http://spark.rstudio.com/dgrapov/MetaMapR/) 
+[MetaMapR](http://dgrapov.github.io/MetaMapR/) 
 ========
 
 ## A metabolomic network mapping tool 
@@ -25,7 +25,9 @@ NOTE: modify file paths for OSX and LINUX
 
 ### Information
 Version: MetaMapR (v1.3) released 09/23/14
-News: See the newest features.
+
+News: [See the newest features.](https://github.com/dgrapov/MetaMapR/blob/master/NEWS.md)
+
 License: GNU General Public License (v3), [read more](https://github.com/dgrapov/MetaMapR/blob/master/LICENSE)
 
 ### TODO
