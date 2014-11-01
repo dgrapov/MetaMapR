@@ -533,7 +533,7 @@ calculate_kegg_edgelist<-reactive({
 
 	#Use KEGG RPAIRS for biochemical  connections (could add option for reaction type, currently only reporting "main" reactions)
 	if(input$bio_edges){
-		index<-getdata()[,input$network_index_bio]
+		index<-unique(check.fix.names(fixlc(getdata()[,input$network_index_bio]),"","")) #remove any characters and mostly whitespace
 		index.type<-switch(input$network_index_type_bio,
 					kegg 	=	"KEGG",
 					pubchemCID = "PubChem CID",
@@ -763,7 +763,7 @@ final_edge_list_calculate<-reactive({
 		res$target<-as.numeric(trans.t)
 		node.attr$network.index<-tmp.id
 	} 
-	
+	# cat("EDGE making\n\n")
 	values$edge.list<-res	
 	values$node.attributes<-data.frame(do.call("cbind",lapply(values$tmp.node.info,fixlc)))
 	colnames(values$node.attributes)<-names(values$tmp.node.info)
@@ -774,6 +774,7 @@ final_edge_list_calculate<-reactive({
 get.d3.Network<- reactive ({
 			if(is.null(values$edge.list)) return()
 			
+			# cat("NETWORK making\n\n")
 			edge.list<-values$edge.list
 			
 			#need to re-encode edge list starting with 0 for d3
@@ -841,6 +842,12 @@ state.check<-reactive({
 		values$tmp.edge.list<-NULL
 		values$tmp.node.info<-NULL
 		values$edgelist.error.message<-NULL
+		#reset state watcher
+		values$mz_edge_state<-NULL
+		values$cor_edge_state<-NULL
+		values$bio_edge_state<-NULL
+		values$chem_edge_state<-NULL
+		
 	} 
 	
 	
