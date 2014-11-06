@@ -533,7 +533,7 @@ calculate_kegg_edgelist<-reactive({
 
 	#Use KEGG RPAIRS for biochemical  connections (could add option for reaction type, currently only reporting "main" reactions)
 	if(input$bio_edges){
-		index<-unique(check.fix.names(fixlc(getdata()[,input$network_index_bio]),"","")) #remove any characters and mostly whitespace
+		index<-check.fix.names(fixlc(getdata()[,input$network_index_bio]),"","") #remove any characters and mostly whitespace
 		index.type<-switch(input$network_index_type_bio,
 					kegg 	=	"KEGG",
 					pubchemCID = "PubChem CID",
@@ -847,7 +847,6 @@ state.check<-reactive({
 		values$cor_edge_state<-NULL
 		values$bio_edge_state<-NULL
 		values$chem_edge_state<-NULL
-		
 	} 
 	
 	
@@ -861,8 +860,28 @@ is.initialized<-reactive({
 })
 	
 #trigger state reset if no options are set
+# seems to not always work?
 observe({
 	if(is.initialized()) state.check()
+})
+
+#adding implicit state reset.. state watcher above doesn't always work?
+observe({
+	if(sum(c(input$bio_edges, input$chem_edges, input$spec_edges, input$cor_edges))==0){
+	cat("ENTERD STATE RESET")
+		values$edge.list<-NULL
+		values$node.attributes<-NULL
+		values$edge.list_for.network<-NULL  #used for ggplot2 # no translation}
+		#temporary objects used for filtering
+		values$tmp.edge.list<-NULL
+		values$tmp.node.info<-NULL
+		values$edgelist.error.message<-NULL
+		#reset state watcher
+		values$mz_edge_state<-NULL
+		values$cor_edge_state<-NULL
+		values$bio_edge_state<-NULL
+		values$chem_edge_state<-NULL
+	}
 })
 
 #control state for each module
