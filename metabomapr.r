@@ -424,16 +424,21 @@ output$data_translation_options<-renderUI({
 		selectInput(inputId = "CTS_translate_id", label = "Translate:", choices = varnames(), selected = varnames()[1], multiple = FALSE),
 		selectInput(inputId = "CTS_translate_from", label = "From:", choices = translation.options(), selected = translation.options()[1], multiple = FALSE),
 		selectInput(inputId = "CTS_translate_to", label = "To:", choices = translation.options(), selected = translation.options()[2], multiple = TRUE),
-		br(),
 		actionButton("CTS_calculate", "Calculate"),
-		HTML('<script type="text/javascript">
-        $(document).ready(function() {
-          $("#CTS_calculate").click(function() { 
-            $("#view_data").text("Translating...please wait.");
-          });
-        });
-      </script>
-		')
+		br(),
+		br(),
+		#Additive mapping or column merge with imputation of emptys
+		selectInput(inputId = "CTS_input_merge_columns", label = "Merge:", choices = varnames(), multiple = TRUE),
+		actionButton("CTS_merge_columns", "Merge Ids")
+		#text busy message, now using gif
+		# HTML('<script type="text/javascript">
+        # $(document).ready(function() {
+          # $("#CTS_calculate").click(function() { 
+            # $("#view_data").text("Translating...please wait.");
+          # });
+        # });
+      # </script>
+		# ')
 		)
 	)	
 })
@@ -441,15 +446,33 @@ output$data_translation_options<-renderUI({
 #CTS translation function
 CTS_calculate_translations<-reactive({
 	if(is.null(input$CTS_calculate)||input$CTS_translate==FALSE) return()
+	# if(is.null(input$CTS_calculate) return()
 	if(input$CTS_calculate == 0) return()
-	#this gets evaluated after a translation is completed and can erro thus condition on this working
-	id<-tryCatch(as.character(unlist(getdata()[,input$CTS_translate_id])),error=function(e){"ERRROR"})	# need to replace empty else bad output from CTS
-	if(all(id=="ERROR")){return()}
-	id[id==""]<-"NA"
-	multi.CTSgetR(id, input$CTS_translate_from, input$CTS_translate_to)
+	isolate({
+		#this gets evaluated after a translation is completed and can error thus condition on this working
+		id<-tryCatch(as.character(unlist(getdata()[,input$CTS_translate_id])),error=function(e){"ERRROR"})	# need to replace empty else bad output from CTS
+		if(all(id=="ERROR")){return()}
+		id[id==""]<-"NA"
+		multi.CTSgetR(id, input$CTS_translate_from, input$CTS_translate_to)
+	})	
+})
+
+#TODO
+#Implement additive mapping
+#by combing columns and imputing empty
+CTS_column_merge<-reactive({
+	if(is.null(input$CTS_merge_columns)||input$CTS_translate==FALSE) return()
+	if(input$CTS_merge_columns == 0) return()
+	isolate({
+		#merging input columns
+		input.obj<-getdata()[,input$CTS_input_merge_columns,drop=FALSE]
+		if(ncol(input.obj)<2) return()
+		return(multiple.merge.na(input.obj))
+	})	
 })
 
 #observer to carry out translations
+#TODO fix double translation due to data set changing
 observe({
 	# if (input$CTS_calculate == 0) return()
 	# if(input$CTS_translate==FALSE) return()
@@ -474,12 +497,24 @@ observe({
 			# values[[input$datasets]]<-cbind(tmp,getdata())
 			
 			#add to existing data (still recalculates)
-			for(i in 1:ncol(tmp)){	
+			for(i in 1:ncol(tmp)){
 				changedata(tmp[,i,drop=FALSE], colnames(tmp)[i])
 			}
 			# values[["X"]]<-cbind(tmp,getdata())		
 			}
 		# }
+	})
+})
+
+
+#observer to carry out column merge
+observe({
+	values$CTS_column_merge_values<-CTS_column_merge()
+	isolate({
+		if(!is.null(values$CTS_column_merge_values)){
+			changedata(values$CTS_column_merge_values, colnames(values$CTS_column_merge_values))
+		}
+	values$CTS_column_merge_values<-NULL # stop entryinto loop above
 	})
 })
 
@@ -520,7 +555,6 @@ DB.names <- function() {
 MZ.encode<-function(){
 	list("m/z : intensity" = "mz_int")
 }
-
 
 #------------------------------------------
 # MAIN functions for edge list calculations
@@ -995,21 +1029,26 @@ output$network_data_upload<-renderUI({
 		
 })
 
-#manage data
+###################################
+# DATA Management
+###################################
 output$network_data_manage<-renderUI({	
 	wellPanel(
 		 checkboxInput(inputId = "manage_data_object", label = "",value=FALSE),
 		 h4('Manage'),
 		 conditionalPanel(condition = "input.manage_data_object",
-			selectInput(inputId = "manage_datasets", label = "Dataset:", choices = c("----"="none",r.datasets()), multiple = TRUE),
+			selectInput(inputId = "manage_datasets", label = "Remove Dataset:", choices = c("----"="none",r.datasets()), multiple = TRUE),
+			actionButton("remove_network_dataset", "Remove"),
 			br(),
-			actionButton("remove_network_dataset", "Remove Data Set")
+			br(),
+			selectInput(inputId = "remove_dataset_columns_ID", label = "Remove Columns:", choices = c("----"="none",varnames()), multiple = TRUE),
+			actionButton("remove_dataset_columns", "Remove")
 		)		
 	)		
 })
 
 
-#watcher for data manage
+#watcher for data set removal
 # from Radiant
 observe({
   if(is.null(input$remove_network_dataset) || input$remove_network_dataset == 0||input$manage_datasets=="none") return()
@@ -1029,6 +1068,19 @@ observe({
     values[['datasets']] <- datasets
   })
 })
+
+#watcher for data set removal
+# from Radiant
+observe({
+  if(is.null(input$remove_dataset_columns) || input$remove_dataset_columns == 0|| input$remove_dataset_columns_ID=="none") return()
+  isolate({
+    old<-getdata()
+	new<-old[,!colnames(old)%in%input$remove_dataset_columns_ID,drop=FALSE]	
+    values[[input$datasets]] <- new
+  })
+})
+
+
 
 #biochemical connections args
 output$network_index_info_bio<-renderUI({
@@ -1211,14 +1263,22 @@ output$SVGnetwork<-renderPrint({
 			edge.list[,2]<-fixln(edge.list[,2,drop=FALSE])
 			colnames(edge.list)[1:2]<-names
 			
+			# #use a constant edge coloring scheme
+			# color.pal<-rainbow(5)
+			# .type<-c('KEGG','Tanimoto','mz','positive correlation','negative correlation')
+			# col.opts<-data.frame(color = color.pal)
+			# rownames(col.opts)<-.type
+			# cur.types<-fixlc(levels(edge.list$type)) # current edge types
+			# edge.color<-fixlc(col.opts[cur.types,,drop=FALSE][cur.types,])
+			# #need to reorder color to the actual order of the edge types
+			
 			#use a constant edge coloring scheme
 			color.pal<-rainbow(5)
-			.type<-c('KEGG','Tanimoto','mz','positive correlation','negative correlation')
+			.type<-c('KEGG','Tanimoto','positive correlation','negative correlation','mass spectral')
 			col.opts<-data.frame(color = color.pal)
 			rownames(col.opts)<-.type
 			cur.types<-fixlc(levels(edge.list$type)) # current edge types
 			edge.color<-fixlc(col.opts[cur.types,,drop=FALSE][cur.types,])
-			#need to reorder color to the actual order of the edge types
 			
 			
 			#create svg of network

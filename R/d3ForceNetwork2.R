@@ -191,7 +191,7 @@ var link = vis.selectAll(\".link\")
           edcol = \"#00FF66\";
           break;
 	  case \"negative correlation\":
-          edcol = \"0066FF\";
+          edcol = \"#0066FF\";
           break;	  
   }
   return edcol;

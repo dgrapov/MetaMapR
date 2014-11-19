@@ -24,7 +24,7 @@ NOTE: modify file paths for OSX and LINUX
 * [Examples](http://dgrapov.github.io/MetaMapR/)
 
 ### Information
-Version: MetaMapR (v1.3) released 09/23/14
+Version: MetaMapR version 1.3.1 (11/19/14)
 
 News: [See the newest features.](https://github.com/dgrapov/MetaMapR/blob/master/NEWS.md)
 

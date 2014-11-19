@@ -20,7 +20,7 @@ CTSgetR<-function(id,from,to,async=FALSE,limit.values=TRUE,progress=TRUE,server=
 	
 	if(limit.values){ 
 		parser<-function(x){
-			tmp<-fromJSON(x)
+			tmp<-jsonlite::fromJSON(x)
 			tryCatch(tmp[,"result"]<-strsplit(fixlc(tmp[,"result"]),"/,")[[1]],error=function(e) {NULL})
 			return(tmp)
 		}
@@ -35,7 +35,7 @@ CTSgetR<-function(id,from,to,async=FALSE,limit.values=TRUE,progress=TRUE,server=
 			})
 						
 	} else {
-		res<-do.call("rbind",lapply(out,fromJSON))
+		res<-do.call("rbind",lapply(out,jsonlite::fromJSON))
 		#format output, could collapse on comma, not sure which is more useful?
 		res<-do.call("rbind",lapply(1:length(res[,"result"]),function(i){
 				if(length(res[,"result"][[i]])==0) { 
@@ -105,9 +105,8 @@ CTS.translate.async<-function(server,from,to,id,async.limit=100){
 # get possible translations from CTS
 CTS.options<-function(){
 		options(warn=-1)	
-		# url<-readLines("http://cts.fiehnlab.ucdavis.edu/service/convert/toValues")
-		url<-getURL("http://cts.fiehnlab.ucdavis.edu/service/convert/toValues")
-		fromJSON(url)
+		url<-readLines("http://cts.fiehnlab.ucdavis.edu/service/convert/toValues")
+		jsonlite::fromJSON(url)
 	}
 
 #from one to multiple translations

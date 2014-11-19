@@ -234,8 +234,7 @@ devium.data.format<-function(obj, type){
 }
 
 #format binbase output (data with meta data structure)
-format.binbase.output<-function(data)
-	{
+format.binbase.output<-function(data){
 
 		#data = name as string
 		object<-get(data)#need to adjust for first row taken as column names
@@ -274,7 +273,7 @@ format.binbase.output<-function(data)
 		# need to break factors
 		
 		#return results as a list
-		list(data=tmp.data,row.metadata=row.meta,col.metadata=col.meta)
+		list(data=data.frame(tmp.data),row.metadata=data.frame(row.meta),col.metadata=data.frame(col.meta))
 	}
 
 #return objects to excel	
@@ -846,16 +845,151 @@ source.local.dir<-function(wd){
 ##merge two data sets based on a common index column
 ## all unique levels of the index are preserved in the final object
 ## i.e. no variables are dropped
-merge.all.col<-function(data1,data2,by="name"){
-		#merge 2 data sets by column retaining all unique and in common rows
-		full.mat<-unique(c(data1$name,data2$name))
-		rownames(data1)<-make.unique(data1$name)
-		rownames(data2)<-make.unique(data2$name)
-		merge1<-data1[full.mat,]
-		merge2<-data2[full.mat,]
-		merged<-data.frame(cbind(merge1,merge2))
-		merged
+merge.data.cube<-function(data1,data2,ID="merge.ID",col.meta="col.metadata",row.meta="row.metadata"){
+	# do full outer join on data
+	# base dimnames for merge on ID name in row- and col meta data
+	# do similar merge on the meta data
+	
+	#need to make a simple common colname ID between which is shared between the two data sets
+	full<-unique(c(data1[[col.meta]][ ,ID],data2[[col.meta]][ ,ID]))
+	tmp.id<-data.frame(id=1:length(full))
+	rownames(tmp.id)<-full
+	tmp.id2<-data.frame(id=full) #to resort columns
+	
+	#recode dimensions of both data sets based on row and col id
+	df1<-data.frame(data1$data)
+	dimnames(df1)<-list(data1[[row.meta]][ ,ID],tmp.id[data1[[col.meta]][ ,ID],])
+	df2<-data.frame(data2$data)
+	dimnames(df2)<-list(data2[[row.meta]][ ,ID],tmp.id[data2[[col.meta]][ ,ID],])
+	
+	#add row ID to make sure row meta is in the correct order
+	df1$._merge_tmp_ID<-make.unique(fixlc(data1[[row.meta]][ ,ID]))
+	df2$._merge_tmp_ID<-make.unique(fixlc(data2[[row.meta]][ ,ID]))
+	
+	#full outer join on the data
+	merged.data<-merge(df1,df2,all=TRUE,sort=FALSE)
+	id<-colnames(merged.data)%in%"._merge_tmp_ID"
+	row.id<-merged.data[,id]
+	merged.data<-merged.data[,!id]
+	
+	#row meta
+	.row.meta<-merge(data1[[row.meta]],data2[[row.meta]],all=TRUE,sort=FALSE)
+	rownames(.row.meta)<-make.unique(fixlc(.row.meta[,ID]))
+	.row.meta<-.row.meta[row.id,]
+	
+	
+	#column meta
+	c1<-data1[[col.meta]]
+	rownames(c1)<-data1[[col.meta]][,ID]
+	c2<-data.frame(data2[[col.meta]])
+	rownames(c2)<-data2[[col.meta]][,ID]
+	.col.meta<-merge(c1,c2,all=TRUE)
+	rownames(.col.meta)<-make.unique(.col.meta[,ID])
+
+	
+	return(list(data=merged.data,row.meta=.row.meta,col.meta=.col.meta[fixlc(tmp.id2[fixln(colnames(merged.data)),]),]))
 }
+
+# merge similar column names
+# filling in each others missing values
+col.merge.na<-function(obj,distance=1){
+	# convert to matrix to avoid dealing with factor
+	
+	obj<-tmp.obj<-as.matrix(obj)
+	
+	#loop on column number 
+	#exit loop when all non-unique columns are merged
+	# inputting missing values in the first instance with non-missing values in the next
+	res<-list()
+	name<-colnames(obj)
+	watcher<-1:length(name)
+	i<-1
+	while(length(watcher)>0){
+		name<-colnames(tmp.obj)
+		watcher<-1:length(name)
+		if(is.null(distance)){ 
+				id<-grep(name[1],name[-1],ignore.case = TRUE)+1  # account for avoiding self match
+			} else {
+				id<-agrep(name[1],name[-1],max.distance=distance,ignore.case = TRUE)+1  # account for avoiding self match
+		}	
+		if(length(id)==0) id<-1
+		if(id>1) {
+			out<-tryCatch(matrix(merge.na(tmp.obj[,1],tmp.obj[,id]),,1) ,error=function(e) {data.frame(rep("error",nrow(obj)))}) # >2 column merges not supported
+			colnames(out)<-name[1]  
+			fixed<-c(watcher[1],id)  
+		} else {
+			out<-obj[,i,drop=FALSE]
+			fixed<-watcher[1]
+		}
+		res[[i]]<-as.matrix(out)
+		watcher<-watcher[!watcher%in%fixed]
+		tmp.obj<-tmp.obj[,watcher,drop=FALSE]
+		# cat(paste(c("DROP--> ",colnames(obj)[(!colnames(obj)%in%colnames(tmp.obj))],"\n"),collapse=", "))
+		# print(c("HAVE--> ",sapply(res,colnames,"\n")))
+		i<-i+1
+	}
+	
+	return(data.frame(do.call("cbind",res)))
+	
+}
+
+#merge two vectors filling in NAs
+merge.na<-function(obj1,obj2){
+	tmp<-fixlc(obj1)
+	tmp[is.na(tmp)]<-fixlc(obj2)[is.na(tmp)]
+	tmp
+}
+
+#wrapper for for multiple column merge.na
+multiple.merge.na<-function(obj,name.char="_",prefix="merged"){
+	# obj is a data.frame
+	# name.char and prefix are used to construct a name for the merged object
+	tmp.obj<-obj
+	while(ncol(tmp.obj)>1){
+		tryCatch(tmp.obj[,1]<-matrix(merge.na(fixlc(tmp.obj[,1]),fixlc(tmp.obj[,2]))), error=function(e){})
+		tmp.obj<-tmp.obj[,-2,drop=FALSE]
+	}	
+	
+	#try to make a column name
+	# break on name and take the last element
+	tmp.n<-unlist(strsplit(colnames(tmp.obj), name.char))
+	colnames(tmp.obj)<-paste0(prefix,name.char,tmp.n[length(tmp.n)])
+	return(tmp.obj)
+}
+
+#trim trailing whitespace
+trim <- function (x) gsub("^\\s+|\\s+$", "", x)
+
+test<-function(){
+#rudimentary unit tests
+
+#merge.data.cube
+#---------------------
+#data
+df1<-data.frame(matrix(1:10,10,10)) 
+df2<-data.frame(matrix(10:20,10,10))
+#col meta
+df1.col<-cbind(merge.ID=letters[c(1:5,11:15)],info=1)
+df2.col<-cbind(merge.ID=letters[c(1:5,21:25)],info=2,info2=3)
+#rowmeta
+df1.row<-cbind(merge.ID=c(1:10),info=1,info2=3)
+df2.row<-cbind(merge.ID=c(11:20),info=2)
+#create data cube
+data1<-list(data=df1,row.metadata=df1.row,col.metadata=df1.col)
+data2<-list(data=df2,row.metadata=df2.row,col.metadata=df2.col)
+tryCatch(merge.data.cube(data1,data2,ID="merge.ID"),error=function(e) {cat("merge.data.cube failed\n")}) # add error report info
+
+
+#multiple merge.na
+#----------------------
+obj<-matrix(1:10, 10,10,byrow=TRUE)
+set.seed(123)
+obj[sample(1:100,75)]<-NA
+colnames(obj)<-paste0(1:ncol(obj),"_variable")
+
+tryCatch(multiple.merge.na(obj),error=function(e){cat("multiple.merge.na<-->FAILED\n")})
+}
+
 
 
 

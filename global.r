@@ -24,7 +24,7 @@ values <- reactiveValues()
 #load packages
 options(repos = c('http://cran.us.r-project.org',"http://cran.rstudio.com/"))
 #options(repos ="http://www.stats.ox.ac.uk/pub/RWin")
-libs <- c("igraph","graph","reshape2","network","sna","Hmisc",
+libs <- c("igraph","graph","reshape2","network","sna","Hmisc","ChemmineR","impute","WGCNA",
 "ggplot2","jsonlite","RCurl","plyr","d3Network","grid","gridSVG","XML","tools","whisker","rjson")
 #load all packages
 check.get.packages(libs)
