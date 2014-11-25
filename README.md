@@ -32,6 +32,8 @@ License: GNU General Public License (v3), [read more](https://github.com/dgrapov
 
 ### Citation
 If you find MetaMapR useful please cite this tool using the doi listed below.
+
+Dmitry Grapov (2014) MetaMapR: Metabolomic Network Analysis and Visualization Tool,
 [![DOI](https://zenodo.org/badge/7400/dgrapov/MetaMapR.png)](http://dx.doi.org/10.5281/zenodo.12880)
 
 ### TODO
