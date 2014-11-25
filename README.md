@@ -30,6 +30,10 @@ News: [See the newest features.](https://github.com/dgrapov/MetaMapR/blob/master
 
 License: GNU General Public License (v3), [read more](https://github.com/dgrapov/MetaMapR/blob/master/LICENSE)
 
+### Citation
+If you find MetaMapR useful please cite this tool using the doi listed below.
+[![DOI](https://zenodo.org/badge/7400/dgrapov/DeviumWeb.png)](http://dx.doi.org/10.5281/zenodo.12879)
+
 ### TODO
 * add partial correlations
 * add cytoscape.js networks
