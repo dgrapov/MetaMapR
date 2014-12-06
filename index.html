@@ -1,100 +1,120 @@
+
 <!DOCTYPE html>
-<html>
+<html class="wf-nojavascript">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+<link href="favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="touch_icon_152x152.png" rel="apple-touch-icon" sizes="152x152"/>
+<link href="touch_icon_144x144.png" rel="apple-touch-icon" sizes="144x144"/>
+<link href="touch_icon_120x120.png" rel="apple-touch-icon" sizes="120x120"/>
+<link href="touch_icon_114x114.png" rel="apple-touch-icon" sizes="114x114"/>
+<link href="touch_icon_72x72.png" rel="apple-touch-icon" sizes="72x72"/>
+<link href="touch_icon_60x60.png" rel="apple-touch-icon" sizes="60x60"/>
+<link href="touch_icon_57x57.png" rel="apple-touch-icon" sizes="57x57"/>
+<link href="touch_icon_57x57.png" rel="apple-touch-icon"/>
+<link href="startup_image_320x480.png" rel="apple-touch-startup-image"/>
+<script type="text/javascript">
+// allows non-javascript browsers to render with fallback fonts
+document.getElementsByTagName("html")[0].className = "";
 
-  <head>
-    <meta charset='utf-8' />
-    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
-    <meta name="description" content="MetaMapR : a Metabolomic Network Generation and Visualization Tool" />
+/*
+  WebFont.load({
+    google: {
+      families: ['Open Sans', 'Droid Sans Mono']
+    }
+  });
+*/
+// link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'
+// link href='http://fonts.googleapis.com/css?family=Droid+Sans+Mono' rel='stylesheet' type='text/css'
 
-    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+WebFontConfig = {
+    google: {
+      families: ['Open Sans', 'Droid Sans Mono']
+    }
+};
 
-    <title>MetaMapR</title>
-  </head>
+// http://kevindew.me/post/47052453532/a-fallback-for-when-google-web-font-loader-fails
+(function() {
+    var wf = document.createElement('script');
+    wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+        '://ajax.googleapis.com/ajax/libs/webfont/1.4.2/webfont.js';
+    wf.type = 'text/javascript';
+    wf.async = 'true';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(wf, s);
+    setTimeout(function() {
+        if (!("WebFont" in window)) {
+            document.getElementsByTagName("html")[0].className += " wf-fail";
+        }
+    }, 1000);
+})();
+</script>
+<!-- combined stylesheet -->
+<link href="stylesheets/style.css" rel="stylesheet" type="text/css"/>
+<title>MetaMapR</title>
+</head>
+<body>
+<div id="site-top">
+<div id="site-top-logo">
+<strong id="logo">((MetaMapR))</strong>
+</div> <!-- site-top-logo -->
+<div id="site-top-nav">
+<ul>
+<li class="selected"><a href="index.html">Home</a></li>
+<li><a href="gallery.html" target="_blank">Gallery</a></li>
+<li><a href="https://github.com/dgrapov/MetaMapR" target="_blank">Download</a></li>
+<li><a href="http://imdevsoftware.wordpress.com/" target="_blank">Blog</a></li>
+</ul>
+</div> <!-- site-top-nav -->
+</div> <!-- site-top -->
+<div id="site-dummy-github" style="position:relative">
+<a href="https://github.com/dgrapov/MetaMapR" target="_blank"><img alt="Fork me on GitHub" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" style="position: absolute; top: 0; right: 0; border: 0;"/></a>
+</div>
+<div class="content" id="site-middle"><div id="front-blurp">
+<div class="main-title"><strong>MetaMapR</strong></div>
+<p>MetaMapR integrates <b>enzymatic transformations</b> with metabolite <b>structural similarity</b>, 
+<b>mass spectral similarity</b> and <b>empirical associations</b> 
+to generate richly connected metabolic networks.</p>
 
-  <body>
+<ul>
+<li>Import .csv or paste text data.</li>
+<li>Translate between <b>> 200 <br>
+    common biological databases</b> using<br>
+    <a href="http://cts.fiehnlab.ucdavis.edu/" target="_blank">The Chemical Translation Service</a></li>
+<li>Query <b>>14,000 biochemical reactions</b> in <a href="http://www.genome.jp/kegg/" target="_blank">KEGG</a></li>
+<li>Connect based on <a href="https://pubchem.ncbi.nlm.nih.gov/" target="_blank">PubChem</a><br> <b>molecular fingerprint</b> structural similarities.</li>
+<li>Identify similar <b>mass spectral patterns</b>.</li>
+<li>Combined based on <b>analysis of correlation</b>.</li>
+<li><b>Visualize</b> dynamic and interactive networks.</li>
+<li>Export results in common file formats<br> and extend using popular third party tools.</li>
+</ul>
+<p><h1>Citation</h1></p>
+<a href="http://dx.doi.org/10.5281/zenodo.12880"><img src="https://zenodo.org/badge/doi/10.5281/zenodo.12880.svg" alt="10.5281/zenodo.12880"></a>
+<p><h1>License</h1></p>
+<p>GNU General Public License (v3), <a href="https://github.com/dgrapov/MetaMapR/blob/master/LICENSE">read more</a></p>
 
-    <!-- HEADER -->
-    <div id="header_wrap" class="outer">
-        <header class="inner">
-          <a id="forkme_banner" href="https://github.com/dgrapov/MetaMapR">View on GitHub</a>
+</div><!-- front-blurp --><div id="front-steps">
 
-          <h1 id="project_title">MetaMapR</h1>
-          <h2 id="project_tagline">Metabolomic Network Generation and Visualization Tool</h2>
+(See <a href="http://ufpr.dl.sourceforge.net/project/metamapr/Metmapr%20v1.2.1%20tutorial%20v1.doc.pdf" target="_blank">Getting started</a> for more
+detailed introductions.)
 
-            <section id="downloads">
-              <a class="zip_download_link" href="https://github.com/dgrapov/MetaMapR/zipball/master">Download this project as a .zip file</a>
-              <a class="tar_download_link" href="https://github.com/dgrapov/MetaMapR/tarball/master">Download this project as a tar.gz file</a>
-            </section>
-        </header>
-    </div>
+<hr/><h1><span class="step" align="middle">Calculate</span></h1>
+<img class="centeredImage" src="images/web_step_1.png" style="width: 50%; height: 50%"/></p>
+<hr/><h1><span class="step" align="middle">Customize</span></h1>
+<img class="centeredImage" src="images/web_step_2.png" style="width: 50%; height: 50%"/>
+<hr/><h1><span class="step" align="middle">Analyze</span></h1>
+<img class="centeredImage" src="images/web_step_3.png" style="width: 50%; height: 50%; vertical-align:middle"/>
+<hr/><h1><span class="step" align="middle">Visualize</span></h1>
+<iframe class="centeredImage" src='images/d3label.html' height=400 width=500 style="vertical-align:middle"></iframe>
 
-    <!-- MAIN CONTENT -->
-    <div id="main_content_wrap" class="outer">
-      <section id="main_content" class="inner">
-        <h3>
-<a name="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages"><span class="octicon octicon-link"></span></a>
-<h2> Connect your metabolomic data with context; using dynamic combinations of metabolite relationships to help test your biological hypotheses.</h2>
-<iframe src='images/d3label.html' height=400 width=650></iframe>
-<h3>Use biochemical, structural similarity, mass spectral similarity, and empirical knowledge to link multivariate biochemical information.</h3>
-<h5>*Try reloading the webpage if you do not see and interactive visualization above.</h5>
-<iframe src='images/test.html' height=650 width=650></iframe>
-<h3>Meahwhile creating interactive networks for data mapping. For example:</h3>
-<h4 id="example_5"> Metabolomic changes between two tissues shown in the context of biochemical and structural similarity relationships.</h4>
-<img src="http://imdevsoftware.files.wordpress.com/2014/04/network_1.png" alt="bio-struct-mass network">
-
-<h4 id="example_4"> Biochemical and structural similarity network between > 1200 small molecules.</h4>
-<img src="http://imdevsoftware.files.wordpress.com/2013/06/wcmc-network.png" alt="">
-
-<h4 id="example_2">Chemical similarity based metabolomic network.</h2>
-<img src="http://imdevsoftware.files.wordpress.com/2013/04/bionetwork1.png" alt="example mass-cor network">
-
-<h4 id="example_2">Biochemical and structural similarity network between metabolic clusters.</h2>
-<img src="http://imdevsoftware.files.wordpress.com/2014/02/cough-syrup-network.png" alt="example mass-cor network">
-
-<h4 id="example_2">Biochemical and structural similarity network.</h2>
-<img src="http://imdevsoftware.files.wordpress.com/2013/02/network_2.png" alt="example mass-cor network">
-
-<h4 id="example_3"> Metabolomic network incorporating structurally unknown molecules.</h4>
-<img src="http://imdevsoftware.files.wordpress.com/2013/06/network1.png?w=590" alt="bio-struct-mass network">
-
-<h4 id="example_1">Biochemical and structural similarity network.</h2>
-<img src="http://imdevsoftware.files.wordpress.com/2013/10/tissue-network.png?w=590" alt="example bio-struct network">
-
-<h4 id="example_2">Mass spectral and empirical correlation network.</h2>
-<img src="http://imdevsoftware.files.wordpress.com/2013/10/mass-spectral.png?w=570&h=596" alt="example mass-cor network">
-
-<h4 id="example_2">Partial correlation metabolic network.</h2>
-<img src="http://imdevsoftware.files.wordpress.com/2014/02/tissue-network-cancer.png" alt="example mass-cor network">
-
-<h4 id="example_2">Partial correlation metabolic network displaying differential response to drug treatments.</h2>
-<img src="http://imdevsoftware.files.wordpress.com/2014/02/treatment-response-network-e1397237849853.png" alt="example mass-cor network">
-
-<h4 id="example_2">Partial correlation metabolic network displaying drug treatment effects.</h2>
-<img src="http://imdevsoftware.files.wordpress.com/2014/02/treatment-effects-network.png" alt="example mass-cor network">
-
-<h4 id="example_2">Correlation network between lipids.</h2>
-<img src="http://imdevsoftware.files.wordpress.com/2013/04/network.png" alt="example mass-cor network">
-
-<h4 id="example_2">Partial correlation network for time-course data.</h2>
-<img src="http://imdevsoftware.files.wordpress.com/2012/11/g9135.png" alt="example mass-cor network">
-
-<h4 id="example_2">Partial correlation network for time-course data converted to area under the curves (AUC).</h2>
-<img src="http://imdevsoftware.files.wordpress.com/2012/12/pls-da-network.jpg" alt="example mass-cor network">
-
-
-<p>Check back soon for more examples and tutorials.</p>
-      </section>
-    </div>
-
-    <!-- FOOTER  -->
-    <div id="footer_wrap" class="outer">
-      <footer class="inner">
+</div><!-- front-steps --></div> <!-- site-middle -->
+<div id="site-bottom">
+ <div id="footer_wrap" class="mouter">
+      <footer class="minner">
         <p class="copyright">MetaMapR maintained by <a href="https://github.com/dgrapov">dgrapov</a></p>
         <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
       </footer>
     </div>
-
-    
-
-  </body>
+</div> <!-- site-bottom -->
+</body>
 </html>
