@@ -24,10 +24,11 @@ values <- reactiveValues()
 #load packages
 options(repos = c('http://cran.us.r-project.org',"http://cran.rstudio.com/"))
 #options(repos ="http://www.stats.ox.ac.uk/pub/RWin")
-libs <- c("igraph","graph","reshape2","network","sna","Hmisc","ChemmineR","impute","WGCNA",
-"ggplot2","jsonlite","RCurl","plyr","d3Network","grid","gridSVG","XML","tools","whisker","rjson")
+libs <- c("rjson","igraph","graph","reshape2","network","sna","Hmisc","ChemmineR","impute","WGCNA",
+"ggplot2","jsonlite","RCurl","plyr","d3Network","grid","gridSVG","XML","tools","whisker")
 #load all packages
 check.get.packages(libs)
+#lapply(1:length(libs), function(i) {library(libs[i],character.only = TRUE)})
 
 #CTS
 #identifier translations (load package)
@@ -38,13 +39,10 @@ check.get.packages(libs)
 # library(CTSgetR)
 # }
 
-#for some people loading CTSgetR causes errors
-# bundle all the code with MetaMapR until CTSgetR is on Cran
-# source("CTS.R") # in R folder now
-#options for translations
-# CTS.options<-CTS.options()
-# save(CTS.options,file="CTS.options")
-values$CTS.options<-CTS.options()
+#CTS options
+# values$CTS.options<-CTS.options()# web query needs packages
+load("data/CTS.options")
+values$CTS.options<-CTS.options
 
 
 
@@ -67,12 +65,6 @@ values$datasets<-datasets # used to dynamically add data sets
 #initialize states
 values$clipboard<-""
 values$network_state<-""
-
-
-#options for translations
-# CTS.options<-CTS.options()
-# save(CTS.options,file="CTS.options")
-values$CTS.options<-CTS.options()
 
 
 

@@ -13,5 +13,3 @@
     * switched to fluidRow layout in shiny UI
     * removed double translation bug
     * added new progress indicator
-    
-

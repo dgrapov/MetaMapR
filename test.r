@@ -9,7 +9,7 @@ library(shiny)
 
 #load MetaMapR
 runApp("C:\\Users\\D\\Dropbox\\Software\\MetaMapR") # home PC
-runApp("C:\\Users\\dgrapov\\Dropbox\\Software\\MetaMapR") # work
+runApp("C:\\Users\\think\\Dropbox\\Software\\MetaMapR") # work
 runApp("/Users/dgrapov/Dropbox/Software/MetaMapR") # OSX
 
 #read
