@@ -1,35 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MetaMapR</title>
+<link rel="shortcut icon" href="./favicon.ico" />
 
-<style type="text/css"> 
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css"> -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+<style type="text/css">
 
-ul 
+#tool a:focus {
+	color: #75A3FF;  /*Sets the text hover color on navbar*/
+	font-size:175%;
+	font-weight: bold;
+}
+
+
+
+#tool a:hover {
+    text-decoration: none;
+    background-color: #4C5870; /*Change rollover cell color here*/
+  }
+
+
+.bs-example{
+	margin: 20px;
+}
+	
+#logo {
+	width: 100px;
+	height: 50px;
+	float: left;
+}
+
+#site-top-logo {
+	display: block;
+	float: left;
+	margin: 0 0 0 0.5em;  /* logo font */
+}	
+
+#tool
     {
-		font-size:20px;
+		/* padding-top: 10px; */
+		/* padding-bottom: 20px; */
+		/* font-size:20px; */
+		background-color:#000000;
+		font-color: #3399FF;
+		font-size:150%;
+		font-family: ‘Lucida Console’, Monaco, monospace;
+		font-weight: bold;
     }
-     
-</style> 
 
-<div class="navbar navbar-fixed-top navbar-inverse" id="tool" data-nav-value="dataview">
-  <div class="navbar-inner">
-    <div class="container-fluid">
-      <a class="brand" href="#" data-value="dataview">MetaMapR</a>
-      <div class="nav-collapse">
-        <ul class="nav">
-		  <li><a href="#" data-value="data">Data</a></li>
-		  <li><a href="#" data-value="network">Network</a></li>
-		  <li><a href="https://github.com/dgrapov/MetaMapR" target="_blank">About</a></li> 
-        </ul>
-      </div>
-    </div>
-  </div>
+label.radio { 
+  padding-left: 18px;
+  padding-right: 0px;
+  margin-left: 3px;
+  display: inline-block; 
+}
+
+.radio input[type="radio"] {
+  float: none; 
+}
+
+label.checkbox  { 
+  display: inline-block; 
+}
+
+.checkbox input[type="checkbox"] { 
+  float: none; 
+}
+
+select { 
+  max-width: 200px;
+}
+
+/* cant figure out how to change height of all selectedInput multiple =TRUE */
+/* select.multiple { 
+  max-width: 200px;
+  height: 200px;
+}
+ */
+textarea { 
+  width: 650px; 
+}
+
+input[type="number"] {
+  max-width: 185px; 
+}
+
+.jslider { 
+  max-width: 200px; 
+}
+
+.well { 
+  padding: 12px; 
+  margin-bottom: 5px; 
+  max-width: 280px; 
+}
+
+.span4 { 
+  max-width: 280px; 
+}
+
+.popover { 
+  width: 600px; 
+  position: relative; top: -75px !important; 
+  left: 320px !important; 
+}
+
+.modal { 
+  /*width: 1000px; */
+  width: 800px; 
+  left: 600px; 
+}
+
+.modal-body {
+  height: 100%;
+  max-height:500px;
+}
+
+div.busy {
+  position:absolute;
+  top: 40%;
+  left: 50%;
+  margin-top: -100px;
+  margin-left: -50px;
+  display:none;
+  background: rgba(255, 255, 255, 1);  /* transparent; */
+  text-align: center;
+  padding-top: 20px;
+  padding-left: 30px;
+  padding-bottom: 40px;
+  padding-right: 30px;
+  border-radius: 5px;
+}
+
+
+
+</style>
+
+
+</head> 
+
+<body>
+<div class="bs-example">
+    <!-- <nav role="navigation" class="navbar navbar-default"> -->
+	<nav role="navigation" class="navbar navbar-fixed-top navbar-inverse" id="tool" data-nav-value="dataview">
+	 <div class="navbar-inner">
+		<div class="container-fluid">
+			<!-- Brand and toggle get grouped for better mobile display -->
+			<div id="site-top-logo">
+				<img src="https://raw.githubusercontent.com/dgrapov/MetaMapR/gh-pages/images/black_logo.jpg" id="logo" />
+			</div> 
+			<div class="navbar-header">
+				<button type="button" data-target="#dataview" data-toggle="collapse" class="navbar-toggle">
+					<span class="sr-only">Toggle navigation</span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+				<!-- <a href="#" class="navbar-brand">Brand</a> -->
+			</div>
+			<!-- Collection of nav links, forms, and other content for toggling -->
+			<div id="dataview" class="collapse navbar-collapse">
+				<ul class="nav navbar-nav" id="test">
+					<li><a href="#" data-value="data">Data</a></li>
+					<li><a href="#" data-value="network">Network</a></li>
+					<!-- <li><a href="https://github.com/dgrapov/MetaMapR" target="_blank">About</a></li>  -->
+					<li><a href="#" data-value="about">About</a></li> 
+				</ul>
+			</div>
+		  </div>
+		</div>	
+    </nav>
 </div>
-
-
-<style type="text/css"> 
-
-body 
-    {
-		padding-top: 25px;
-		<!-- font-size:20px; -->
-    }
-     
-</style> 
+</body>
+</html>  

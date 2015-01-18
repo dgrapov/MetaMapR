@@ -1,4 +1,8 @@
 ### Features and Fixes
+#### version 1.4 (1/18/15)
+    * updated logo and CSS styling
+    * updated About
+    * added screenshots
 #### version 1.3.1 (11/19/14)
     * fixed CTS translations
     * added ID merging for additive translations

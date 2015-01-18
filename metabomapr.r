@@ -418,8 +418,7 @@ translation.options<-function(){
 
 output$data_translation_options<-renderUI({
 	wellPanel(	
-	checkboxInput(inputId = "CTS_translate", label = "",value=FALSE),
-	 h4('Translate'),
+	checkboxInput(inputId = "CTS_translate", label = tags$span(style="font-size: 20px; color: #75A3FF", "Translate"),value=FALSE),
 	 conditionalPanel(condition = "input.CTS_translate",
 		selectInput(inputId = "CTS_translate_id", label = "Translate:", choices = varnames(), selected = varnames()[1], multiple = FALSE),
 		selectInput(inputId = "CTS_translate_from", label = "From:", choices = translation.options(), selected = translation.options()[1], multiple = FALSE),
@@ -506,6 +505,14 @@ observe({
 	})
 })
 
+#####################
+#		IFRAME for about
+#########
+output$about <- renderUI({
+  tags$iframe(
+  seamless="seamless", style="width:100%; height:700px;",
+  src="http://dgrapov.github.io/MetaMapR/")
+})
 
 #observer to carry out column merge
 observe({
@@ -1012,8 +1019,7 @@ make.edge.list.index<-function(edge.names, edge.list){
 output$network_data_upload<-renderUI({
 		
 	wellPanel(
-		 checkboxInput(inputId = "upload_data_object", label = "",value=FALSE),
-		 h4('Upload'),
+		 checkboxInput(inputId = "upload_data_object", label = tags$span(style="font-size: 20px; color: #75A3FF;",'Upload'),value=FALSE),
 		 conditionalPanel(condition = "input.upload_data_object",
 			 withTags(div(class='row-fluid',
 							 div(class='span3', checkboxInput(inputId = "csv_row_header", label = "row names",value=TRUE)),
@@ -1034,8 +1040,7 @@ output$network_data_upload<-renderUI({
 ###################################
 output$network_data_manage<-renderUI({	
 	wellPanel(
-		 checkboxInput(inputId = "manage_data_object", label = "",value=FALSE),
-		 h4('Manage'),
+		 checkboxInput(inputId = "manage_data_object", label =  tags$span(style="font-size: 20px; color: #75A3FF;",'Manage'),value=FALSE),
 		 conditionalPanel(condition = "input.manage_data_object",
 			selectInput(inputId = "manage_datasets", label = "Remove Dataset:", choices = c("----"="none",r.datasets()), multiple = TRUE),
 			actionButton("remove_network_dataset", "Remove"),
@@ -1089,8 +1094,7 @@ output$network_index_info_bio<-renderUI({
 	 # withTags(div(class='row',
 	 # div(class='span', checkboxInput(inputId = "bio_edges", label = "",value=FALSE)),
 	 # div(class='span', h4('Biochemical')))),
-	 checkboxInput(inputId = "bio_edges", label = "",value=FALSE),
-	 h4('Biochemical Reactions'),
+	 checkboxInput(inputId = "bio_edges", label = tags$span(style="font-size: 20px; color: #75A3FF",'Biochemical Reactions'),value=FALSE),
 	 # tags$style(type='text/css', "#bio_edges { font-weight: bold; font-size:16px;}"),
 		conditionalPanel(condition = "input.bio_edges",
 		selectInput(inputId = "network_index_type_bio", label = "Database:", choices = list("KEGG" = "kegg" ), selected = "KEGG", multiple = FALSE),
@@ -1105,21 +1109,20 @@ output$network_index_info_bio<-renderUI({
 #chemical similarity args
 output$network_index_info_chem<-renderUI({
 	wellPanel(
-	checkboxInput(inputId = "chem_edges", label = "",value=FALSE),
-	h4('Structural Similarity'),
+	checkboxInput(inputId = "chem_edges", label = tags$span(style="font-size: 20px; color: #75A3FF",'Structural Similarity'),value=FALSE),
 		conditionalPanel(condition = "input.chem_edges",
 		selectInput(inputId = "network_index_type_chem", label = "Database:", choices = list("PubChem CID" = "pubchemCID" ), selected = "PubChem CID", multiple = FALSE),
 		selectInput(inputId = "network_index_chem", label = "Metabolite index:", choices = varnames(), selected = varnames()[1], multiple = FALSE),
 		# selectInput(inputId = "network_index_type_chem", label = "Index type:", choices = DB.names(), selected = DB.names()[3], multiple = FALSE),
-		numericInput(inputId = "tanimoto_cutoff" , "Cutoff:", value = 0.7, min = 0, max = 1, step = .005)
+		numericInput(inputId = "tanimoto_cutoff" , "Cutoff:", value = 0.7, min = 0, max = 1, step = .005),
+		tags$style(type='text/css', "#tanimoto_cutoff { height: 25px;}")
 	))
 })
 
 #spectral similarity args
 output$network_index_info_spec<-renderUI({
 	wellPanel(
-	checkboxInput(inputId = "spec_edges", label = "",value=FALSE),
-	h4('Spectral Similarity'),
+	checkboxInput(inputId = "spec_edges", label = tags$span(style="font-size: 20px; color: #75A3FF",'Spectral Similarity'),value=FALSE),
 		conditionalPanel(condition = "input.spec_edges",
 		selectInput(inputId = "network_index_spec", label = "Mass spectra:", choices = varnames(), selected = varnames()[1], multiple = FALSE),
 		selectInput(inputId = "network_index_type_spec", label = "Encode type:", choices = MZ.encode(), selected = MZ.encode()[1], multiple = FALSE),
@@ -1127,7 +1130,11 @@ output$network_index_info_spec<-renderUI({
 		numericInput(inputId = "network_spec_nodes_max", "Maximum connections:", min = 1, max = 1000, value = 5, step = 1), # need to dynamixcally update max, or make it big for now?
 		numericInput(inputId = "spec_cutoff" , "cutoff:", value = 0.7, min = 0, max = 1, step = .005),
 		selectInput(inputId = "network_spec_retention_index", label = "Retention time filter:", choices = c("none" = 0,varnames()), selected = "none", multiple = FALSE),
-		numericInput(inputId = "network_spec_retention_index_cutoff" , "Delta cutoff:", value = 10000, min = 0, step = 500)
+		numericInput(inputId = "network_spec_retention_index_cutoff" , "Delta cutoff:", value = 10000, min = 0, step = 500),
+		#CSS
+		tags$style(type='text/css', "#network_spec_nodes_max { height: 25px;}"),
+		tags$style(type='text/css', "#spec_cutoff { height: 25px;}"),
+		tags$style(type='text/css', "#network_spec_retention_index_cutoff { height: 25px;}")
 	))
 })
 
@@ -1135,12 +1142,12 @@ output$network_index_info_spec<-renderUI({
 output$network_index_info_cor<-renderUI({
 	 
 wellPanel(
-	checkboxInput(inputId = "cor_edges", label = "",value=FALSE),
-	h4('Correlation'),
+	checkboxInput(inputId = "cor_edges", label = tags$span(style="font-size: 20px; color: #75A3FF",'Correlation'),value=FALSE),
 		conditionalPanel(condition = "input.cor_edges",
-		selectInput(inputId = "network_index_cor", label = "Metabolite index:", choices = varnames(), selected = varnames(), multiple = TRUE),
+		selectizeInput(inputId = "network_index_cor", label = "Metabolite index:", choices = varnames(), selected = varnames(), multiple = TRUE),
 		selectInput(inputId = "network_index_type_cor", label = "Method:", choices = list(pearson ="pearson", spearman = "spearman", biweight = "biweight"), selected = "spearman", multiple = FALSE),
 		numericInput(inputId = "cor_cutoff" , "p-value", value = 0.05, min = 0, max = 1, step = .005),
+		tags$style(type='text/css', "#cor_cutoff { height: 25px;}"),
 		checkboxInput(inputId = "cor_edges_fdr", label = "FDR correct", value=TRUE)
 	))
 })
@@ -1313,14 +1320,14 @@ output$SVGnetwork<-renderPrint({
 # see http://bl.ocks.org/nsonnad/5982652 for colored links
 output$networkPlot<-renderPrint({
 		if (input$create_edgelist_network == 0) 
-		return(h4("Please select options and draw the network."))
+		return(tags$span(style="font-size: 16px; color: #75A3FF;","Please select options and draw the network."))
 	
 		#calculate edges and plot 		
 	isolate({
 		
 		# if(!input$metabomapr == "Network") return()
 		if(length(values$edge.list) == 0) { 
-			return(h4("No connections fit set criteria."))
+			return(tags$span(style="font-size: 16px; color: red;","No connections fit set criteria."))
 		} 
 		if(any(input$network_plot_type %in% "interactive")) {
 			# h4("D3 network goes here!")

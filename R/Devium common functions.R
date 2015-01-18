@@ -517,37 +517,19 @@ unique.id<-function(obj)
 		}
 
 #function to check for packages and attempt to download if not found
-check.get.packages<-function(pkg)
+check.get.packages<-function(pkg.name)
 	{
 		options(warn=-1)
-		
-		# #make sure bio conductor is one of the repositories
-		# #will need a mechanism to make sure this stays upto date
-		# if(!all(names(getOption("repos"))%in%"BioCsoft"))
-			# {
-				# r<-getOption("repos")
-				# r["BioCsoft"]<-"http://www.bioconductor.org/packages/2.11/bioc" # needs to be specific version
-				# options(repos = r)
-				
-				# #add layer to call 
-				 # #source("http://bioconductor.org/biocLite.R")
-				 # #biocLite("package to install")
-				 
-				 # if install fails
-				# #r.version<-paste(sessionInfo()$R.version$major,sessionInfo()$R.version$minor, sep=".")
-				# #bioc.url<-paste("http://www.bioconductor.org/packages/",r.version,"/bioc", sep="")
-				# #r["BioCsoft"]<-bioc.url # needs to be specific to R version
-				# #options(repos = r)
-			# }	
+	
 		
 		res<-character()
 		
-		need<-as.matrix(sapply(1:length(pkg),function(i)
+		need<-as.matrix(sapply(1:length(pkg.name),function(i)
 			{
 				
-				if(require(pkg[i],character.only = TRUE)==FALSE)
+				if(require(pkg.name[i],character.only = TRUE)==FALSE)
 					{
-					 res<-c(res,pkg[i])
+					 res<-c(res,pkg.name[i])
 					}
 			}))
 			

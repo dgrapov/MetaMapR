@@ -23,12 +23,19 @@ values <- reactiveValues()
 
 #load packages
 options(repos = c('http://cran.us.r-project.org',"http://cran.rstudio.com/"))
+options("BioC_mirror" = "http://www.bioconductor.org")
 #options(repos ="http://www.stats.ox.ac.uk/pub/RWin")
 libs <- c("rjson","igraph","graph","reshape2","network","sna","Hmisc","ChemmineR","impute","WGCNA",
 "ggplot2","jsonlite","RCurl","plyr","d3Network","grid","gridSVG","XML","tools","whisker")
 #load all packages
 check.get.packages(libs)
 #lapply(1:length(libs), function(i) {library(libs[i],character.only = TRUE)})
+
+# #use packrat (FAILS!!!)
+# check.get.packages("packrat")
+# packrat::restore()
+
+
 
 #CTS
 #identifier translations (load package)

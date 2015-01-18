@@ -1,11 +1,41 @@
+
+
+#tool a:focus {
+	color: #75A3FF;  Sets the text hover color on navbar
+	font-size:175%;
+	font-weight: bold;
+}
+
+
+
+#tool a:hover {
+    text-decoration: none;
+    background-color: #4C5870; Change rollover cell color here
+  }
+
+
+#logo {
+	width: 100px;
+	height: 50px;
+	float: left;
+}
+
+#site-top-logo {
+	display: block;
+	float: left;
+	margin: 0 0 0 0.5em;  logo font
+}	
+
 #tool
     {
-		/* padding-top: 10px; */
-		/* padding-bottom: 20px; */
-		/* font-size:20px; */
-		background-color:#E0E0E0;
-		color: #36648B;
-		font-size:110%;
+		/* padding-top: 10px;
+		padding-bottom: 20px; */
+		font-size:20px;
+		background-color:#000000;
+		color: #3399FF;
+		font-size:30px;
+		font-family: ‘Lucida Console’, Monaco, monospace;
+		font-weight: bold;
     }
 
 label.radio { 
@@ -31,18 +61,19 @@ select {
   max-width: 200px;
 }
 
-/* cant figure out how to change height of all selectedInput multiple =TRUE */
-/* select.multiple { 
+/* cant figure out how to change height of all selectedInput multiple =TRUE
+select multiple { 
   max-width: 200px;
   height: 200px;
-}
- */
+} */
+
 textarea { 
   width: 650px; 
 }
 
-input[type="number"] {
+.numeric input[type="number"] {
   max-width: 185px; 
+  height: 30px;
 }
 
 .jslider { 
@@ -53,6 +84,7 @@ input[type="number"] {
   padding: 12px; 
   margin-bottom: 5px; 
   max-width: 280px; 
+  font-family: ‘Lucida Console’, Monaco, monospace;
 }
 
 .span4 { 
@@ -66,7 +98,7 @@ input[type="number"] {
 }
 
 .modal { 
-  /*width: 1000px; */
+  width: 1000px;
   width: 800px; 
   left: 600px; 
 }
@@ -83,7 +115,7 @@ div.busy {
   margin-top: -100px;
   margin-left: -50px;
   display:none;
-  background: rgba(255, 255, 255, 1);  /* transparent; */
+  background: rgba(255, 255, 255, 1);  transparent;
   text-align: center;
   padding-top: 20px;
   padding-left: 30px;
@@ -91,5 +123,3 @@ div.busy {
   padding-right: 30px;
   border-radius: 5px;
 }
-
-
