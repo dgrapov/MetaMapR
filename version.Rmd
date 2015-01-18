@@ -1,0 +1,17 @@
+---
+title: "About"
+output:
+  html_document:
+    css: www/css/bootstrap.css
+    keep_md: yes
+    self_contained: no
+---
+```{r, echo=FALSE}
+info<-data.frame(read.table("version_info.txt",header=TRUE))
+```
+
+* Version: `r info$version`
+* Date: `r info$date`
+* [News](https://github.com/dgrapov/MetaMapR/blob/master/NEWS.md)
+* [Report Issues](https://github.com/dgrapov/MetaMapR/issues)
+
