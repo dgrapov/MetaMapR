@@ -1,3 +1,7 @@
+# README
+
+
+
 [MetaMapR](http://dgrapov.github.io/MetaMapR/) 
 ========
 
@@ -26,7 +30,7 @@ NOTE: modify file paths for OSX and LINUX
 * [Examples](http://dgrapov.github.io/MetaMapR/)
 
 ### Information
-Version: MetaMapR version 1.3.1 (11/19/14)
+Version: 1.4.0 (1/18/2015)
 
 News: [See the newest features.](https://github.com/dgrapov/MetaMapR/blob/master/NEWS.md)
 
@@ -43,5 +47,4 @@ Dmitry Grapov (2014) MetaMapR: Metabolomic Network Analysis and Visualization To
 * add partial correlations
 * add cytoscape.js networks
 * enable network mapping
-
 
