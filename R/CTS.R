@@ -1,4 +1,7 @@
-CTSgetR<-function(id,from,to,async=FALSE,limit.values=TRUE,progress=TRUE,server="http://cts.fiehnlab.ucdavis.edu/service/convert"){ 
+library(jsonlite)
+library(RCurl)
+
+CTSgetR<-function(id,from,to,async=FALSE,limit.values=TRUE,progress=TRUE,server="http://cts.fiehnlab.ucdavis.edu/service/convert",...){ 
 
 	opts<-CTS.options()
 	if(!to%in%opts|!from%in%opts) {
@@ -72,7 +75,7 @@ CTS.translate<-function(server,from,to,id,progress=TRUE){ #arguably parallel, se
 }
 
 #asynchronous, need to debug
-CTS.translate.async<-function(server,from,to,id,async.limit=100){ 
+CTS.translate.async<-function(server,from,to,id,async.limit=100,...){ 
 		require("RCurl")
 		# results are returned as JSON encoded strings
 		# limit controls the maximum number of request per call to the server
@@ -105,7 +108,7 @@ CTS.translate.async<-function(server,from,to,id,async.limit=100){
 # get possible translations from CTS
 CTS.options<-function(){
 		options(warn=-1)	
-		url<-readLines("http://cts.fiehnlab.ucdavis.edu/service/convert/toValues")
+		url<-readLines("http://cts.fiehnlab.ucdavis.edu/service/conversion/toValues")
 		jsonlite::fromJSON(url)
 	}
 
@@ -179,7 +182,7 @@ test<-function(){
 	
 	#get all values for the translation
 	id <- c("QNAYBMKLOCPYGJ-REOHCLBHSA-N")
-	from <- "Human"
+	from <- "InChIKey"
 	to <- "Chemical Name"
 	CTSgetR(id,from,to,limit.values=FALSE)
 	
