@@ -1,6 +1,3 @@
-library(jsonlite)
-library(RCurl)
-
 CTSgetR<-function(id,from,to,async=FALSE,limit.values=TRUE,progress=TRUE,server="http://cts.fiehnlab.ucdavis.edu/service/convert",...){ 
 
 	opts<-CTS.options()

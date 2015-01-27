@@ -48,8 +48,8 @@ check.get.packages(libs)
 
 #CTS options
 # values$CTS.options<-CTS.options()# web query needs packages
-load("data/CTS.options")
-values$CTS.options<-CTS.options
+# load("data/CTS.options")
+values$CTS.options<-CTS.options()
 
 
 

@@ -428,16 +428,16 @@ output$data_translation_options<-renderUI({
 		br(),
 		#Additive mapping or column merge with imputation of emptys
 		selectInput(inputId = "CTS_input_merge_columns", label = "Merge:", choices = varnames(), multiple = TRUE),
-		actionButton("CTS_merge_columns", "Merge Ids")
-		#text busy message, now using gif
-		# HTML('<script type="text/javascript">
-        # $(document).ready(function() {
-          # $("#CTS_calculate").click(function() { 
-            # $("#view_data").text("Translating...please wait.");
-          # });
-        # });
-      # </script>
-		# ')
+		actionButton("CTS_merge_columns", "Merge Ids"),
+		#text busy message, now using gif not sure why this needs its own
+		HTML('<script type="text/javascript">
+        $(document).ready(function() {
+          $("#CTS_calculate").click(function() { 
+            $("#view_data").text("Translating...please wait. For faster translations see http://cts.fiehnlab.ucdavis.edu/");
+          });
+        });
+      </script>
+		')
 		)
 	)	
 })

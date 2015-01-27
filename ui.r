@@ -84,40 +84,41 @@ shinyUI(fluidPage(
 			conditionalPanel(condition = "input.tool == 'network'",
 				tabsetPanel( id = "metabomapr",
 					#Network
-					tabPanel("Network", list(actionButton("create_edgelist_network", list(icon( "fa fa-magic"),"Draw Network")),
+					tabPanel("Network", list(actionButton("create_edgelist_network", tags$div(icon("fa fa-magic"),tags$label(style="font-size: 20px;","Draw Network"),style="font-size: 20px; color: #293D66;")),
 					br(),
 					br(),
-					tags$details( # options for network plotting
+					tags$details(tags$summary(tags$div(icon("fa fa-bar-chart-o"),tags$label(style="font-size: 20px;","Customize"),style="font-size: 20px; color: #293D66;")),
 						fluidRow(
 							column(2,
 							tags$span(style="font-size: 20px; color: #75A3FF","Plot"),
 							  checkboxGroupInput(inputId="network_plot_type", label="Plot type", choices=c("interactive","PNG","SVG"),selected = c("interactive")),
 							  numericInput(inputId = "plot_output_width", "width", min = 0,  value = 400, step = 10),
 							  numericInput(inputId = "plot_output_height", "height", min = 0,  value = 400, step = 10),
-							  tags$style(type="text/css", "#plot_output_height     { width:50px;}"),
-							  tags$style(type="text/css", "#plot_output_width     { width:50px;}")
+							  tags$style(type="text/css", "#plot_output_height     { width:60px; height:30px;}"),
+							  tags$style(type="text/css", "#plot_output_width     { width:60px; height:30px;}")
 							),
 							column(2,
 								tags$span(style="font-size: 20px; color: #75A3FF","Nodes"),
 								checkboxInput(inputId = "network_plot_show_name", label = "show names",value=TRUE),
 								uiOutput("node_names"),
+								br(),br(),
 								numericInput(inputId = "network_plot_name_size", "label size", min = 0, max = 20, value = 5, step = 1),
 								numericInput(inputId = "network_plot_node_size", "vertex size", min = 0, max = 20, value = 5, step = 1),
 								numericInput(inputId = "network_plot_node_alpha", "transparency", min = 0, max = 1, value = 1, step = .1),
-								tags$style(type="text/css", "#network_plot_name_size     { width:50px;}"),
-								tags$style(type="text/css", "#network_plot_node_size     { width:50px;}"),
-								tags$style(type="text/css", "#node_names     { width:150px;}"),
-								tags$style(type="text/css", "#network_plot_node_alpha     { width:50px;}")
+								tags$style(type="text/css", "#network_plot_name_size     { width:50px; height:30px;}"),
+								tags$style(type="text/css", "#network_plot_node_size     { width:50px; height:30px;}"),
+								tags$style(type="text/css", "#node_names     { width:150px; height:30px;}"),
+								tags$style(type="text/css", "#network_plot_node_alpha     { width:50px; height:30px;}")
 							),
 							column(2,
 								tags$span(style="font-size: 20px; color: #75A3FF","Edges"),
 								checkboxInput(inputId = "network_plot_bezier", label = "curved edges",value=FALSE), # only with renderPlot too slow for SVG
 								numericInput(inputId = "network_plot_edge_size", "thickness", min = 1,  value = 2, step = .25),
 								numericInput(inputId = "network_plot_edge_length", "length", min = 1,  value = 70, step = 10),
-								tags$style(type="text/css", "#network_plot_edge_length     { width:50px;}"),
-								tags$style(type="text/css", "#network_plot_edge_size     { width:50px;}"),
+								tags$style(type="text/css", "#network_plot_edge_length     { width:50px; height:30px;}"),
+								tags$style(type="text/css", "#network_plot_edge_size     { width:50px; height:30px;}"),
 								numericInput(inputId = "network_plot_edge_alpha", "transparency", min = .01,  value = .6, step = .1),
-								tags$style(type="text/css", "#network_plot_edge_alpha     { width:50px;}")
+								tags$style(type="text/css", "#network_plot_edge_alpha     { width:50px; height:30px;}")
 							)
 						  )
 					),
