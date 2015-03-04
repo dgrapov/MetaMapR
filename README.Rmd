@@ -56,3 +56,7 @@ Dmitry Grapov (2014) MetaMapR: Metabolomic Network Analysis and Visualization To
 * add cytoscape.js networks
 * enable network mapping
 
+### FAQ
+1. How are multiple edge types handled in the network output?
+
+The default setting for returning all edge types or only unique edges can be found under the network tab using the unique edges checkbox. If the option is selected then edges are returned based on a hierarchy Biochemical > Structural > Mass Spectral > Correlation, otherwise all edges are returned.
