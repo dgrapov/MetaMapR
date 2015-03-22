@@ -48,7 +48,7 @@ check.get.packages(libs)
 
 #CTS options
 # values$CTS.options<-CTS.options()# web query needs packages
-# load("data/CTS.options")
+# load("Data/CTS.options")
 values$CTS.options<-CTS.options()
 
 
@@ -65,7 +65,7 @@ values[["Citric Acid Cycle"]] <-data.frame(metabolite=TCA.names,KEGG = TCA.kegg,
 datasets<-"Citric Acid Cycle"
 
 #metabolomics example small data set
-values[["metabolomics data"]]<-read.csv("data/example data.csv",row.names=1)
+values[["metabolomics data"]]<-read.csv("Data/example data.csv",row.names=1)
 datasets<-c("Citric Acid Cycle", "metabolomics data")
 values$datasets<-datasets # used to dynamically add data sets
 
