@@ -5,10 +5,13 @@
 [MetaMapR](http://dgrapov.github.io/MetaMapR/) 
 ========
 
-## A metabolomic network mapping tool 
+### A metabolomic network mapping tool 
 ![demo](Manual/metamapr_long.gif)
 
-## [Screenshots](https://github.com/dgrapov/MetaMapR/blob/master/screenshots.md)
+### Demo
+Contact me at createdatasol at gmail.com if you would like to use the software on a trial server.
+
+### [Screenshots](https://github.com/dgrapov/MetaMapR/blob/master/screenshots.md)
 
 ### Installation
 Requires [R](http://cran.us.r-project.org/) and [Shiny](https://github.com/rstudio/shiny-server). 
@@ -37,11 +40,7 @@ News: [See the newest features.](https://github.com/dgrapov/MetaMapR/blob/master
 License: GNU General Public License (v3), [read more](https://github.com/dgrapov/MetaMapR/blob/master/LICENSE)
 
 ### Citation
-If you find MetaMapR useful please cite this tool using the doi listed below.
-
-Dmitry Grapov (2014) MetaMapR: Metabolomic Network Analysis and Visualization Tool
-
-[![DOI](https://zenodo.org/badge/7400/dgrapov/MetaMapR.png)](http://dx.doi.org/10.5281/zenodo.12880)
+You can read the a pre-print of the [full manuscript](https://github.com/dgrapov/MetaMapR/blob/dev/Manual/MetaMapR%20manuscript.pdf). If you find this tool useful please cite the [published manuscript](http://bioinformatics.oxfordjournals.org/content/early/2015/04/03/bioinformatics.btv194.short?rss=1) in Oxford Bioinformatics.
 
 ### TODO
 * add partial correlations
