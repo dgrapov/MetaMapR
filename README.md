@@ -15,13 +15,7 @@ Contact me at createdatasol at gmail.com if you would like to use the software o
 
 ### Installation
 Requires [R](http://cran.us.r-project.org/) and [Shiny](https://github.com/rstudio/shiny-server). 
-Try it out using the [Shiny glimmer server](http://spark.rstudio.com/dgrapov/MetaMapR/) 
-or run locally by pasting the following code into the R console:
-```r
-library(shiny)
-shiny::runGitHub('MetaMapR','dgrapov')
-```
-Alternatively download the .zip file, unzip and run the following code (example for file on desktop)
+Download the .zip file, unzip and run the following code (example for file on desktop on Windows)
 ```r
 library(shiny)
 shiny::runApp('~/../Desktop/MetaMapR-master/MetaMapR-master')
