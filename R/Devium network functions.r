@@ -1772,10 +1772,13 @@ spectra.string.to.matrix<-function(spectra, encode.char = ":"){
 		#cast into a matrix, change NA to zeros
 		spec.mat<-dcast(mat2,m_z ~ analyte,value.var="intensity")
 		spec.mat[is.na(spec.mat)]<-0
+		#convert to numeric and order by m_z
+		spec.mat<-data.frame(sapply(spec.mat,fixln))
+		spec.mat<-spec.mat[order(as.numeric(spec.mat$m_z)),]
 		#format into matrix with m_z as rows
-		tmp<-matrix(fixln(spec.mat[,-1]),ncol=ncol(spec.mat)-1)
-		dimnames(tmp)<-list(fixlc(spec.mat[,1]),c(1:ncol(tmp)))
-		return(tmp)
+		tmp<-spec.mat[,-1]
+		dimnames(tmp)<-list(spec.mat$m_z,c(1:ncol(tmp)))
+		return(as.matrix(tmp))
 }
 
 #get cosine correlations from mz/intensity strings
@@ -1858,12 +1861,12 @@ get.spectral.edge.list<-function(spectra, known = 0, cutoff = 0.7, edge.limit = 
 			# obj[c(1:nrow(obj))<=edge.limit,]
 		# })
 		
-		top.id<-edge.list.filter.partial(edge.list=edges[,1:2],weight=abs(fixln(edges[,3])),max.edges=edge.limit)
+		top.id<-edge.list.filter.partial(edge.list=edges[,1:2,drop=FALSE],weight=abs(fixln(edges[,3])),max.edges=edge.limit)
 		#could use edge.list.full for more extreme filtering
-		results<-edges[top.id,]
+		results<-edges[top.id,,drop=FALSE]
 		
 		# results<-do.call("rbind",top.edges)
-		results<-data.frame(results[!is.na(results[,1]),])
+		results<-data.frame(results[!is.na(results[,1]),,drop=FALSE])
 		colnames(results)<-c("source", "target", "weight")
 		
 		#filter connections based retention time
@@ -2020,9 +2023,12 @@ set.node.color<-function(obj,inc.lev="triangle",dec.lev="vee",no.lev="ellipse",i
 #simpler of the one above
 clean.edgeList<-function(data,source="source",target="target",type=NULL){
 	
+	#source and target should be numeric or will be coerced to numeric
+	data[,source]<-fixln(data[,source])
+	data[,target]<-fixln(data[,target])
 	
 	#remove self edges
-	id<-data[,source]==data[,target]
+	id<-data[,source]==data[,target] 
 	data<-data[!id,]
 	
 	if(!is.null(type)){
@@ -2049,11 +2055,13 @@ clean.edgeList<-function(data,source="source",target="target",type=NULL){
 test<-function(){
 
 
-kegg.id<-c("C00186","C00022")
+kegg.id<-c("C00212","C00020","C00105", "C00299")
+
 #KEGG rxn DB
 DB<-get.KEGG.pairs(type="main")
 #create KEGG and CID based biochemical/chemical similarity network
 kegg.list<-get.Reaction.pairs(kegg.id,DB,index.translation.DB=NULL,parallel=FALSE,translate=FALSE)
+
 
 #get tanimoto similarity
 cids<-c("70","51","204")
