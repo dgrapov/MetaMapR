@@ -42,10 +42,10 @@ You can read the a pre-print of the [full manuscript](https://github.com/dgrapov
 * enable network mapping
 
 ### FAQ
-1. How are multiple edge types handled in the network output?
+1) How are multiple edge types handled in the network output?
 
 The default setting for returning all edge types or only unique edges can be found under the network tab using the unique edges checkbox. If the option is selected then edges are returned based on a hierarchy Biochemical > Structural > Mass Spectral > Correlation, otherwise all edges are returned.
 
-2. How do I map between the numeric node ids in the calculated edge list and the data I uploaded?
+2) How do I map between the numeric node ids in the calculated edge list and the data I uploaded?
 
 By default the numeric node IDs are assigned based on the order (row) of the uploaded data. For example 1 corresponds to the analyte in the first row. The node attributes tab also shows the mapping between the identifier used for the network and the assigned numeric node ID. A custom node ID can also be used during the network calculation process under network > more options > edge index. The custom ID should be unique.
