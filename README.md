@@ -1,4 +1,4 @@
-[![paypal](http://createdatasol.com/)
+[![paypal](http://createdatasol.com/)]
 
 [MetaMapR](http://dgrapov.github.io/MetaMapR/) 
 ========
