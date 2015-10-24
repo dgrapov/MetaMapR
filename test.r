@@ -20,7 +20,7 @@ cat(readLines('d3label.html'))
 
 # #test metabolomic data
 {
-setwd("C:/Users/D/Dropbox/Software/MetamapR/data")
+setwd("data")
 x<-read.csv("example data.csv")
 spectra <- x$Mass_Spectra
 CID <-x$PubChem_Index

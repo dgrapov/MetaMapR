@@ -49,7 +49,7 @@ check.get.packages(libs)
 #CTS options
 # values$CTS.options<-CTS.options()# web query needs packages
 #load("Data/CTS.options")
-values$CTS.options<-tryCatch(CTS.options(), error = function(e) {load("Data/CTS_options");return(CTS.options)})
+values$CTS.options<-tryCatch(CTS.options(), error = function(e) {load("data/CTS_options");return(CTS.options)})
 
 
 
