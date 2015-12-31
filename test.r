@@ -2,6 +2,7 @@
 # install.packages('radiant',repos=c("https://github.com/dgrapov/MetaMapR", CRAN = "http://cran.rstudio.com"), dependencies = TRUE) 
 # shiny::runApp(system.file('MetaapR', package='radiant'), port = 8100)
 
+#test...
 
 library(shiny)
 #if no internet load local devium scripts
