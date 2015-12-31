@@ -584,7 +584,7 @@ calculate_kegg_edgelist<-reactive({
 				)
 			
 		if(is.null(values$reaction.DB)){
-			values$reaction.DB<-get.KEGG.pairs(type="main")
+			values$reaction.DB<-get.KEGG.pairs2(type="main")
 		}
 			
 		#carry out translations

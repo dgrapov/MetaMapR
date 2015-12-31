@@ -836,6 +836,25 @@ get.KEGG.pairs<-function(type="main",url="https://gist.githubusercontent.com/dgr
 			}	
 			return(out)
 	}
+#look up KEGG reactant pairs 
+#local file
+get.KEGG.pairs2<-function(type="main",file="Data/KEGG_RPairs.txt"){ 
+  
+  full<-read.table(file,sep="\t")
+  
+  if(type =="main"){
+    out<-full[agrep("main",full[,3]),1:2] # now will get all main types
+  } 
+  
+  if(type =="all"){
+    out<-full[,1:2]
+  }
+  
+  if(type =="full"){
+    out<-full
+  }  
+  return(out)
+}
 
 #generic fxn (of get.KEGG.pairs) to get data from GIST which is tab separated (no spaces)
 get.GIST.csv<-function(url="https://gist.githubusercontent.com/dgrapov/c079db6f3a31f7fa478f/raw/5f421d716708994e9986d89323d956007398e753/oxylipins%20edge%20list"){ 
