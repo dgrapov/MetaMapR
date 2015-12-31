@@ -1,4 +1,4 @@
-[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_buynowCC_LG.gif)](https://www.paypal.com/us/cgi-bin/webscr?cmd=_flow&SESSION=eQeO9FW4JM4OjRYczAZdbr2qUwYGPx0ZOv-AC4Bf2BVFSv10qPwr1QQrDfK&dispatch=50a222a57771920b6a3d7b606239e4d529b525e0b7e69bf0224adecfb0124e9b61f737ba21b081984719ecfa9a8ffe80733a1a700ced90ae)
+[![paypal](https://raw.githubusercontent.com/dgrapov/CDS/gh-pages/www/images/donate.png)](http://createdatasol.com/)
 
 [MetaMapR](http://dgrapov.github.io/MetaMapR/) 
 ========
