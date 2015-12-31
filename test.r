@@ -2,7 +2,12 @@
 # install.packages('radiant',repos=c("https://github.com/dgrapov/MetaMapR", CRAN = "http://cran.rstudio.com"), dependencies = TRUE) 
 # shiny::runApp(system.file('MetaapR', package='radiant'), port = 8100)
 
-#test...
+#update on server
+sudo git reset --hard origin master
+#or
+sudo git pull origin master
+sudo chmod 777 SVGnetwork.html
+sudo chmod 777 data/CID.SDF.DB
 
 library(shiny)
 #if no internet load local devium scripts
