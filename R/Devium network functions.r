@@ -838,7 +838,7 @@ get.KEGG.pairs<-function(type="main",url="https://gist.githubusercontent.com/dgr
 	}
 #look up KEGG reactant pairs 
 #local file
-get.KEGG.pairs2<-function(type="main",file="Data/KEGG_RPAIRS.txt"){ 
+get.KEGG.pairs2<-function(type="main",file="data/KEGG_RPAIRS"){ 
   
   full<-read.table(file,sep="\t")
   
