@@ -1,4 +1,5 @@
-[![paypal](https://raw.githubusercontent.com/dgrapov/CDS/gh-pages/www/images/donate.png)](http://createdatasol.com/)
+
+<b><p style="color:red; font size='7';">MetaMapR is no longer maintaned as an open source project. Please use the hosted version which can befound at<a href="http://createdatasol.com/"> www.createdatasol.com</a> or check out the open source <a href="https://github.com/dgrapov/metabomapr?files=1"> R library.</a></b></p>
 
 [MetaMapR](http://dgrapov.github.io/MetaMapR/) 
 ========
