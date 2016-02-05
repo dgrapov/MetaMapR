@@ -13,13 +13,8 @@ Contact me at createdatasol at gmail.com if you would like to use the software o
 ### [Screenshots](https://github.com/dgrapov/MetaMapR/blob/master/screenshots.md)
 
 ### Installation
-Requires [R](http://cran.us.r-project.org/) and [Shiny](https://github.com/rstudio/shiny-server). 
-Download the .zip file, unzip and run the following code (example for file on desktop on Windows)
-```r
-library(shiny)
-shiny::runApp('~/../Desktop/MetaMapR-master/MetaMapR-master')
-```
-NOTE: modify file paths for OSX and LINUX 
+<a href="http://createdatasol.com/"> www.createdatasol.com</a> 
+
 
 ### Instructions
 * [Tutorial](http://ufpr.dl.sourceforge.net/project/metamapr/Metmapr%20v1.2.1%20tutorial%20v1.doc.pdf)
