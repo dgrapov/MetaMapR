@@ -13,7 +13,7 @@ Contact me at createdatasol at gmail.com if you would like to use the software o
 ### [Screenshots](https://github.com/dgrapov/MetaMapR/blob/master/screenshots.md)
 
 ### Installation
-<a href="http://createdatasol.com/"> www.createdatasol.com</a> 
+### <a href="http://createdatasol.com/"> www.createdatasol.com</a> 
 
 
 ### Instructions
