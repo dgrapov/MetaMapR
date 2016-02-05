@@ -5,9 +5,6 @@
 ### A metabolomic network mapping tool 
 ![demo](Manual/metamapr_long.gif)
 
-### Demo
-Contact me at createdatasol at gmail.com if you would like to use the software on a trial server.
-
 ### [Screenshots](https://github.com/dgrapov/MetaMapR/blob/master/screenshots.md)
 
 ### Installation
